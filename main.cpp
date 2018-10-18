@@ -43,8 +43,6 @@
 #include "Data_logging.h"
 
 #include "ReferencesCompensator.h"
-#include "SubLimbsUpperBody.h"
-#include "ArmsForceTorqueKinChain.h"
 #include "Grasping.h"
 #include "OptimalFilters.h"
 
@@ -216,7 +214,7 @@ int main(int argc, char **argv) //(int argc, char *argv[])
     //while(!done)
     {
         // filter the velocity
-        myThread.Des_RelativeVelocity = FilterDesiredVelocity->getRK4Integral(myThread.Des_RelativeVelocity);
+        //myThread.Des_RelativeVelocity = FilterDesiredVelocity->getRK4Integral(myThread.Des_RelativeVelocity);
 
             // if (!noInput && (myThread.Des_RelativeVelocity(0)== 0.00)
             //              && (myThread.Des_RelativeVelocity(1)== 0.00)

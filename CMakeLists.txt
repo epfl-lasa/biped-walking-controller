@@ -30,15 +30,14 @@ set(HEADERS    ${HEADERS_FOLDER}/InitBalWlkParameters.h
                ${HEADERS_FOLDER}/MPCOptimizer.h
                ${HEADERS_FOLDER}/PatternsGenerator.h
                ${HEADERS_FOLDER}/EstimatorCompensators.h
-
                ${HEADERS_FOLDER}/Data_logging.h
-
                ${HEADERS_FOLDER}/ReferencesCompensator.h
                ${HEADERS_FOLDER}/Grasping.h
                ${HEADERS_FOLDER}/OptimalFilters.h
                ${HEADERS_FOLDER}/CpBalWlkCtrlThread.h
                ${HEADERS_FOLDER}/ArmsForceTorqueKinChain.h
-               ${HEADERS_FOLDER}/ArmsForceTorqueSensorsChains.h)
+               ${HEADERS_FOLDER}/ArmsForceTorqueSensorsChains.h
+               ${HEADERS_FOLDER}/QPOasesSolver.hpp)
 
 set(SOURCES    ${SRC_FOLDER}/InitBalWlkParameters.cpp
                ${SRC_FOLDER}/CommunicationControl.cpp
@@ -47,9 +46,7 @@ set(SOURCES    ${SRC_FOLDER}/InitBalWlkParameters.cpp
                ${SRC_FOLDER}/MPCOptimizer.cpp
                ${SRC_FOLDER}/PatternsGenerator.cpp
                ${SRC_FOLDER}/EstimatorCompensators.cpp
-
-               ${SRC_FOLDER}/Data_logging.cpp
-               
+               ${SRC_FOLDER}/Data_logging.cpp            
                ${SRC_FOLDER}/ReferencesCompensator.cpp
                ${SRC_FOLDER}/Grasping.cpp
                ${SRC_FOLDER}/CpBalWlkCtrlThread.cpp

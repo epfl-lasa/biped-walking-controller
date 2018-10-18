@@ -50,9 +50,6 @@
 #include "Data_logging.h"
 
 #include "ReferencesCompensator.h"
-#include "SubLimbsUpperBody.h"
-#include "ArmsForceTorqueKinChain.h"
-#include "ArmsForceTorqueSensorsChains.h"
 #include "Grasping.h"
 #include "OptimalFilters.h"
 
@@ -121,10 +118,6 @@ public:
     InitBalWlkParameters            *Parameters;
     VectorXd               Des_RelativeVelocity;
     VectorXd               Feedback_RelativeVelocity;
-
-    // // instantiating sub limbs objects 
-    subLimb_LeftArm  root_left_elbow;
-    subLimb_RightArm root_right_elbow;
 
     // Declaring kinematic chain of the arms force/torque sensors
     iCub::iKin::iKinChain *left_elbow_chain;
@@ -230,12 +223,6 @@ public:
 
     KinConverter YarpEigenConv;
 
-
-    
-    // Create force torque transformation for Arms
-    ArmsForceTorqueKinChain Arms_FT_Kin;
-    // New
-    ArmsForceTorqueSensorsChains ArmsFTsensorChains;
 
     // Usefull Transformation
     Transformations Trnsfrms;
