@@ -147,15 +147,6 @@ int main(int argc, char **argv) //(int argc, char *argv[])
     double RunDuration   = rf.check("duration", Value(5), "Looking for Running Duration ").asDouble();
     int FT_feedbackType  = rf.check("FT_feedback", Value(0), "Looking for Running Duration ").asInt();
 
-    // std::string robotName  = rf.find("robot").asString();
-    // std::string m_moduleName = rf.find("name").asString();
-
-    // std::cout<< "Running with:" <<std::endl;
-    // std::cout<< "m_moduleName: " << m_moduleName.c_str() <<std::endl;
-
-    // set the period of the pattern generator
-    //.int period = 40; // [ms]
-
     // convert the period from millisecond to second
     double m_period = 0.001 * (double) period;
 
@@ -186,6 +177,7 @@ int main(int argc, char **argv) //(int argc, char *argv[])
      // variables for end of walking configuration
     int n_Samp1, n_Samp_init;
         n_Samp1 = (int)(round(myThread.Parameters->DurationSteps[0]/myThread.Parameters->SamplingTime));
+        
 
     // Set the Desired CoM velocity
     myThread.Des_RelativeVelocity(0) = 0.16;
@@ -211,7 +203,6 @@ int main(int argc, char **argv) //(int argc, char *argv[])
     // =================================
 
     while(!(done && finalConf) && !myThread.StopCtrl)
-    //while(!done)
     {
         // filter the velocity
         //myThread.Des_RelativeVelocity = FilterDesiredVelocity->getRK4Integral(myThread.Des_RelativeVelocity);

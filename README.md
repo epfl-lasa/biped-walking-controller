@@ -1,2 +1,107 @@
 # biped-walking-controller
-Reactive omnidirectional walking controller for biped humanoid robot iCub
+
+This module implements a reactive omnidirectional walking controller for the biped humanoid robot iCub.
+
+Given desired velocity (v<sub>x</sub>, v<sub>y</sub>, w<sub>z</sub>) of the center of mass (CoM) of the robot (actually the frame attached the the CoM), the controller compute and execute the footstep positions and orientation required to realized the desired velocity of the CoM.
+
+The robot under this walking controller can be driven in two mode: 
+- Direct velocity based reactive walking mode  or 
+- Interaction forces based reactive walking (where an admittance is used to convert the applied forces into velocity)
+
+For more details see [Capture-point based balance and reactive omnidirectional walking controller](https://ieeexplore.ieee.org/document/8239532)
+
+---
+
+## Compilation and build
+
+Clone the repository
+
+```bash
+$ cd ~/controller_dir
+$ git clone https://github.com/epfl-lasa/biped-walking-controller.git
+```
+Install the dependencies
+
+### Dependencies
+
+Prior the compilation of this controller, make sure you have installed the following software:
+- [YARP](https://github.com/robotology/yarp)
+- [ICUB](https://github.com/robotology/icub-main)
+- [Eigen3]()
+- [qpOASES](https://projects.coin-or.org/qpOASES/wiki/QpoasesInstallation)
+- [yarpWholeBodyInterface ](https://github.com/robotology/yarp-wholebodyinterface)
+
+For simulation
+- [Gazebo](http://gazebosim.org/tutorials?tut=install_ubuntu&cat=install)
+- [gazebo_yarp_plugins](https://github.com/robotology/gazebo-yarp-plugins)
+- [icub-gazebo](https://github.com/robotology/icub-gazebo)
+
+---
+
+### build
+Edit first the `CMakeLists.txt` file to indicate :
+- the correct paths of qpOASES lib file (`libqpOASES.so`) and qpOASES directory
+- the correct path to eigen3
+
+Once the CMakeList.txt edited, the controller can be built. Just run
+
+```bash
+$ cd ~/controller_dir
+$ mkdir built && cd built
+$ cmake .. && make
+```
+---
+
+## Running the controller
+Running this controller in its current version is still quite elaborate. 
+
+- start yarpver
+- (simulation) start gazebo simulator and import include the robot model (`iCub (no hands)`)
+- Bring the robot in home position (e.g. `$ yarpmotorgui --from homePoseBalancing.ini --robot robot_name (e.g. icub or icubSim)` and then press the 'Home All' button)
+- Launch the controller as follows : `$ ./WalkingGrasping --from ../config/BalanceWalkingController.ini`
+
+
+---
+
+
+## Expected behavior
+
+The behavior of the controller is  demonstrated [here](https://www.youtube.com/watch?v=9hKOVHDDnfc&t=16s)
+
+
+---
+
+## Controller details
+
+
+### Configuration file
+
+- `robot`: name of the robot to connect to (e.g icubSim for simulation and icub for the real robot)
+- `name`: name of the module. All ports open by the controller will include this name (default: walkingGrasping)
+- `wbi_config_file`: name of the configuration file of yarpWholeBodyInterface (yarpWholeBodyInterface.ini)
+- `wbi_joint_list`: list of joints within the `wbi_config_file` to be loaded by the wholeBodyInterface (default: ROBOT_DYNAMIC_MODEL_JOINTS)
+- `period`: period of the controller thread (default 40 ms)
+- `modulePeriod`: period of the module
+- `duration`: running time duration in secondes, once reached the robot stops and goes back to its initial standing posture
+- `FT_feedback`: mode of reactive walking (0: direct velocity mode with no force interaction; 1: admittance control using feet forces/moments and 2: admittance using measured arms forces/momemts)
+
+
+### Other parameters
+
+Others parameters are in the `src/InitBalWlkParameters.cpp` file. 
+
+
+
+#### Citing this contribution
+In case you want to cite the content of this controller implementation, please refer to [Capture-point based balance and reactive omnidirectional walking controller](https://ieeexplore.ieee.org/document/8239532) and use the following bibtex entry:
+
+``` 
+ @inproceedings{bombile2017capture,
+  title={Capture-point based balance and reactive omnidirectional walking controller},
+  author={Bombile, Michael and Billard, Aude},
+  booktitle={Humanoid Robotics (Humanoids), 2017 IEEE-RAS 17th International Conference on},
+  pages={17--24},
+  year={2017},
+  organization={IEEE}
+}
+```

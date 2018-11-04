@@ -175,8 +175,6 @@ bool CpBalWlkCtrlThread::threadInit()
     RobotKin->InitLeftLegInvKin();
     RobotKin->InitRightLegInvKin();
 
-    cout << " up is ok " << 2 << endl;
-
     // *******************************************************************************************
     // Instantiation of the robot locomotion module
     // *******************************************************************************************
@@ -467,10 +465,6 @@ void CpBalWlkCtrlThread::threadRelease()
         RobotDevices->ipos_right_leg->setRefSpeed(i, RobotDevices->commands_right_leg[i]);
     }
 
-    cout << " Done 1" << endl;
-
-    //moveToinitialWalkingPose(RobotDevices->iencs_left_leg, RobotDevices->iencs_right_leg, RobotDevices->ipos_left_leg, RobotDevices->ipos_right_leg, false, joints_Offset, false, Desired_JointsPositions);
-
     yarp::sig::Vector Des_lljoints, Des_rljoints;
                       Des_lljoints.resize(RobotDevices->lljoints, 0.0);
                       Des_rljoints.resize(RobotDevices->rljoints, 0.0);
@@ -487,9 +481,6 @@ void CpBalWlkCtrlThread::threadRelease()
 
     // close the data Logger
     DataLogger.Close_files();
-
-//        Joints_ouput_Port.interrupt();
-//        Joints_ouput_Port.close();
 
     // release the CpWalkingController
     CpBalWlkController->ReleaseCpBalWlkController();
@@ -592,9 +583,6 @@ void CpBalWlkCtrlThread::run()
        //TrajectCompensation.PrevStanceY = CpBalWlkController->CoPref->CoPRefY;
     }
 
-    cout << "Pattern Generation  solved in: " << Time::now()-t_run << " s " <<endl;
-
-
     // *****************************************************************************************
     // Estimation of the robot state
     // *****************************************************************************************
@@ -616,11 +604,7 @@ void CpBalWlkCtrlThread::run()
     // get IMU measurements
     BotSensors.getImuOrientationValues();
     BotSensors.getImuAccelerometerValues();
-    // acceleration withrespect to the base
-    // meas_acceleration_B = TrajectCompensation.get_m_Acceleration_InBase(BotSensors.m_acceleration, BotSensors.m_orientation_rpy);
-    // meas_velocity_B     = TrajectCompensation.getEstimatedCoMVelocity(Parameters->SamplingTime, BotSensors.m_acceleration, BotSensors.m_orientation_rpy);
-    // reading the encoders values and updating the chains
-    
+        
     // Feet Force/Torque measurement
     BotSensors.getLeftLegForceTorqueValues();
     BotSensors.getRightLegForceTorqueValues();
@@ -656,8 +640,6 @@ void CpBalWlkCtrlThread::run()
     // // compute the arms inverse kinematics
     // RobotKin->ComputeLeftArmInvKin(Graspingtask.Desired_Left_Arm_PoseAsAxisAngles, RobotDevices->encoders_left_arm, true);
     // RobotKin->ComputeRightArmInvKin(Graspingtask.Desired_Right_Arm_PoseAsAxisAngles, RobotDevices->encoders_right_arm, true);
-
-    cout << "inverse kinematics  solved in: " << Time::now()-t_IK << " s " <<endl;
 
     // ============  ADDING JOINTS COMPENSATION ===============================
           
@@ -798,18 +780,6 @@ void CpBalWlkCtrlThread::run()
 
     }
 
-    cout << "grasping  solved in: " << Time::now()- t_IK_f << " s " <<endl;
-
-    // 
-    cout << " qDot_Lhand_Comp in:  \n" << qDot_Lhand_Comp << endl;
-    cout << " qDot_Rhand_Comp in:  \n" << qDot_Rhand_Comp << endl;
-    //
-    cout << " Desired_Left_Arm_PoseAsAxisAngles in:       " << Graspingtask.Desired_Left_Arm_PoseAsAxisAngles.toString().c_str() <<endl;
-    cout << " RobotKin->Left_Arm_Chain->EndEffPose() in:  " << RobotKin->Left_Arm_Chain->EndEffPose().toString().c_str() <<endl;
-    //
-    cout << " Desired_Right_Arm_PoseAsAxisAngles in:      " << Graspingtask.Desired_Right_Arm_PoseAsAxisAngles.toString().c_str() <<endl;
-    cout << " RobotKin->Right_Arm_Chain->EndEffPose() in: " << RobotKin->Right_Arm_Chain->EndEffPose().toString().c_str() <<endl;
-
     // ================ TRAJECTORY TRACKING COMPENSATION =======================
     //
     yarp::sig::Vector F_lleg_jts_yarp(RobotKin->LeftLegChain->getDOF()),
@@ -843,8 +813,6 @@ void CpBalWlkCtrlThread::run()
                          BotSensors.r_foot_FT_vector,
                          CoM_measurements,
                          Test_Data);
-
-     cout << "Writing in file  solved in: " << Time::now()- t_IK_write << " s " <<endl;
 
    // 
    // stop if the robot loses contact wit the ground
