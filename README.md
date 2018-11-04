@@ -55,7 +55,7 @@ $ cmake .. && make
 ## Running the controller
 Running this controller in its current version is still quite elaborate. 
 
-- start yarpver
+- start yarpserver
 - (simulation) start gazebo simulator and import include the robot model (`iCub (no hands)`)
 - Bring the robot in home position (e.g. `$ yarpmotorgui --from homePoseBalancing.ini --robot robot_name (e.g. icub or icubSim)` and then press the 'Home All' button)
 - Launch the controller as follows : `$ ./WalkingGrasping --from ../config/BalanceWalkingController.ini`
@@ -76,6 +76,8 @@ The behavior of the controller is  demonstrated [here](https://www.youtube.com/w
 
 ### Configuration file
 
+The configuration file is `BalanceWalkingController.ini` locate in the `config` folder. The parameters are
+
 - `robot`: name of the robot to connect to (e.g icubSim for simulation and icub for the real robot)
 - `name`: name of the module. All ports open by the controller will include this name (default: walkingGrasping)
 - `wbi_config_file`: name of the configuration file of yarpWholeBodyInterface (yarpWholeBodyInterface.ini)
@@ -83,7 +85,17 @@ The behavior of the controller is  demonstrated [here](https://www.youtube.com/w
 - `period`: period of the controller thread (default 40 ms)
 - `modulePeriod`: period of the module
 - `duration`: running time duration in secondes, once reached the robot stops and goes back to its initial standing posture
+
 - `FT_feedback`: mode of reactive walking (0: direct velocity mode with no force interaction; 1: admittance control using feet forces/moments and 2: admittance using measured arms forces/momemts)
+
+- `VelocityX`: the initial forward or backward velocity of the robot in [m/s]
+- `VelocityY`:  the initial lateral velocity of the robot in [m/s]
+- `OmegaZ`:	the initial rotational velocity of the robot about the vertical axis in [m/s]	
+
+```
+Note: should you want to change the velocity at run time, you can do it in the while loop of the main.cpp file. 
+An input port will be added for that purpose soon.
+``` 
 
 
 ### Other parameters
