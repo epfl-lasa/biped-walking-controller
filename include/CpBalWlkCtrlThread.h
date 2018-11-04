@@ -134,6 +134,10 @@ public:
    
     ReferencesCompensator TrajectCompensation;
 
+    // Inverse Kinematics
+    InverseKinematicsSolver InvKinSolver_lleg; 
+    InverseKinematicsSolver InvKinSolver_rleg; 
+
     //Inertial and CoM
     //VectorXd Inertial_measurements;
     VectorXd CoM_measurements;    		// as class member

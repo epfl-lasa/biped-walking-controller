@@ -680,6 +680,29 @@ Eigen::VectorXd RobotSensors::getImuGyroValues()
 	return m_gyro_xyz;
 }
 
+
+bool RobotSensors::getImuOrientationAcceleration()
+{
+    //
+    // Reading of inertial measurement
+    IMU_values  = IMU_port_In.read();
+
+    for (int i=0; i<IMU_values->size(); i++) {
+        Inertial_measurements(i)= IMU_values->get(i).asDouble();
+    }
+    // roll pitch yaw
+    m_orientation_rpy[0] = IMU_values->get(0).asDouble();
+    m_orientation_rpy[1] = IMU_values->get(1).asDouble();
+    m_orientation_rpy[2] = IMU_values->get(2).asDouble();
+    // accelerations 
+    m_acceleration(0) = IMU_values->get(3).asDouble();
+    m_acceleration(1) = IMU_values->get(4).asDouble();
+    m_acceleration(2) = IMU_values->get(5).asDouble();
+
+
+    return true;
+}
+
 Eigen::VectorXd RobotSensors::getLeftArmForceTorqueValues()
 {
 	l_arm_FT_data  = l_arm_FT_inputPort.read();
@@ -1334,7 +1357,7 @@ void CommandsWriter::WriteLegsCommands(yarp::sig::Vector DesiredLeftLeg_joints,
                     botDevices.ipos_left_legDir->setPosition(j, Sent_commands_left_leg[j]);
                     botDevices.ipos_right_legDir->setPosition(j,Sent_commands_right_leg[j]);
                 }
-                Time::delay(0.0005);
+                Time::delay(0.00005);
             }
 
         }
@@ -1408,7 +1431,7 @@ void CommandsWriter::WriteArmsCommands( yarp::sig::Vector DesiredLeftArm_joints,
 
                 }
 
-                Time::delay(0.0005);
+                Time::delay(0.00005);
             }
             
         }

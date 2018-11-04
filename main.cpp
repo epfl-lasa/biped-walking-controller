@@ -147,6 +147,11 @@ int main(int argc, char **argv) //(int argc, char *argv[])
     double RunDuration   = rf.check("duration", Value(5), "Looking for Running Duration ").asDouble();
     int FT_feedbackType  = rf.check("FT_feedback", Value(0), "Looking for Running Duration ").asInt();
 
+    Eigen::Vector3d InitVelocity;
+    InitVelocity(0) = rf.check("VelocityX", Value(0.10), "Looking for forward velocity ").asDouble();
+    InitVelocity(1) = rf.check("VelocityY", Value(0), "Looking for lateral velocity ").asDouble();
+    InitVelocity(2) = rf.check("OmegaZ", Value(0), "Looking for rotation velocity ").asDouble();
+
     // convert the period from millisecond to second
     double m_period = 0.001 * (double) period;
 
@@ -177,17 +182,11 @@ int main(int argc, char **argv) //(int argc, char *argv[])
      // variables for end of walking configuration
     int n_Samp1, n_Samp_init;
         n_Samp1 = (int)(round(myThread.Parameters->DurationSteps[0]/myThread.Parameters->SamplingTime));
-        
 
-    // Set the Desired CoM velocity
-    myThread.Des_RelativeVelocity(0) = 0.16;
-    myThread.Des_RelativeVelocity(1) = 0.00;
-    myThread.Des_RelativeVelocity(2) = 0.0;
 
-    // Input velocity low pass Filter
-    firstOrderIntegrator *FilterDesiredVelocity;
+    // Set the Initial Desired CoM velocity
+    myThread.Des_RelativeVelocity = InitVelocity;
 
-    FilterDesiredVelocity = new firstOrderIntegrator(myThread.Parameters->SamplingTime, 2.8, 2.8, myThread.Des_RelativeVelocity); 
 
     //bool ft_sensing = false;
 
@@ -204,8 +203,6 @@ int main(int argc, char **argv) //(int argc, char *argv[])
 
     while(!(done && finalConf) && !myThread.StopCtrl)
     {
-        // filter the velocity
-        //myThread.Des_RelativeVelocity = FilterDesiredVelocity->getRK4Integral(myThread.Des_RelativeVelocity);
 
             // if (!noInput && (myThread.Des_RelativeVelocity(0)== 0.00)
             //              && (myThread.Des_RelativeVelocity(1)== 0.00)
@@ -280,10 +277,6 @@ int main(int argc, char **argv) //(int argc, char *argv[])
                 cout << " Feet Alignment done, Now closing " << endl;
             }
 
-            // // filter the velocity
-            // myThread.Des_RelativeVelocity = FilterDesiredVelocity->getRK4Integral(myThread.Des_RelativeVelocity);
-
-        //Time::delay(m_period);
 
     }
 
@@ -299,13 +292,6 @@ int main(int argc, char **argv) //(int argc, char *argv[])
     // int n_Samp1, n_Samp_init;
     
     myThread.stop();
-
-
-    if (FilterDesiredVelocity)
-    {
-        delete FilterDesiredVelocity;
-        FilterDesiredVelocity = 0;
-    }
 
     // close the wholebodyInterface object (robot)
     if (robot) 

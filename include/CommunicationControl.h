@@ -314,6 +314,7 @@ class RobotSensors
 	    yarp::sig::Vector getImuOrientationValues();
 	    Eigen::VectorXd getImuAccelerometerValues();
 	    Eigen::VectorXd getImuGyroValues();
+        bool getImuOrientationAcceleration();
 	    Eigen::VectorXd getLeftArmForceTorqueValues();
 	    Eigen::VectorXd getRightArmForceTorqueValues();
 	    Eigen::VectorXd getLeftLegForceTorqueValues();

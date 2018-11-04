@@ -140,8 +140,7 @@ bool CpBalWlkCtrlThread::threadInit()
     CoM_measurements_offset = CoM_measurements;
 
     // get IMU measurements
-    BotSensors.getImuOrientationValues();
-    BotSensors.getImuAccelerometerValues();
+    BotSensors.getImuOrientationAcceleration();
 
     // get the left and right force/torque values
     BotSensors.getLeftLegForceTorqueValues();
@@ -172,8 +171,12 @@ bool CpBalWlkCtrlThread::threadInit()
     RobotKin->UpdateLeftArmKinChain(RobotDevices->encoders_left_arm);
     RobotKin->UpdateRightArmKinChain(RobotDevices->encoders_right_arm);
 
-    RobotKin->InitLeftLegInvKin();
-    RobotKin->InitRightLegInvKin();
+    // inverse kinematics with IPOPT
+    // RobotKin->InitLeftLegInvKin();
+    // RobotKin->InitRightLegInvKin();
+    // inverse kinematics iterative gradient based
+    InvKinSolver_lleg.InitializeIK(RobotKin->LeftLegChain,  0.90, 12, 1e-4, 0.450);
+    InvKinSolver_rleg.InitializeIK(RobotKin->RightLegChain, 0.90, 12, 1e-4, 0.450);
 
     // *******************************************************************************************
     // Instantiation of the robot locomotion module
@@ -602,8 +605,7 @@ void CpBalWlkCtrlThread::run()
     // get CoM measurements
 
     // get IMU measurements
-    BotSensors.getImuOrientationValues();
-    BotSensors.getImuAccelerometerValues();
+    BotSensors.getImuOrientationAcceleration();
         
     // Feet Force/Torque measurement
     BotSensors.getLeftLegForceTorqueValues();
@@ -635,11 +637,14 @@ void CpBalWlkCtrlThread::run()
 
     double t_IK =Time::now();
 
-    RobotKin->ComputeLeftLegInvKin(GaitInIMU->DesiredLeftLegPoseAsAxisAngles, RobotDevices->encoders_left_leg, true);
-    RobotKin->ComputeRightLegInvKin(GaitInIMU->DesiredRightLegPoseAsAxisAngles, RobotDevices->encoders_right_leg, true);
+    // RobotKin->ComputeLeftLegInvKin(GaitInIMU->DesiredLeftLegPoseAsAxisAngles, RobotDevices->encoders_left_leg, true);
+    // RobotKin->ComputeRightLegInvKin(GaitInIMU->DesiredRightLegPoseAsAxisAngles, RobotDevices->encoders_right_leg, true);
+    yarp::sig::Vector myDes_left_leg_joints  = InvKinSolver_lleg.get_IKsolution(GaitInIMU->DesiredLeftLegPoseAsAxisAngles, RobotDevices->encoders_left_leg, true);
+    yarp::sig::Vector myDes_right_leg_joints = InvKinSolver_rleg.get_IKsolution(GaitInIMU->DesiredRightLegPoseAsAxisAngles, RobotDevices->encoders_right_leg, true);
+
     // // compute the arms inverse kinematics
     // RobotKin->ComputeLeftArmInvKin(Graspingtask.Desired_Left_Arm_PoseAsAxisAngles, RobotDevices->encoders_left_arm, true);
-    // RobotKin->ComputeRightArmInvKin(Graspingtask.Desired_Right_Arm_PoseAsAxisAngles, RobotDevices->encoders_right_arm, true);
+    // RobotKin->ComputeRightArmInvKin(Graspingtask.Desired_Right_Arm_PoseAsAxisAngles, RobotDevices->encoders_right_arm, true);  
 
     // ============  ADDING JOINTS COMPENSATION ===============================
           
@@ -649,7 +654,8 @@ void CpBalWlkCtrlThread::run()
     if (writeCommands)
     {
         //
-        CmdsWriter.WriteLegsCommands(RobotKin->DesiredLeftLeg_joints, RobotKin->DesiredRightLeg_joints, *RobotDevices);
+        //CmdsWriter.WriteLegsCommands(RobotKin->DesiredLeftLeg_joints, RobotKin->DesiredRightLeg_joints, *RobotDevices);
+        CmdsWriter.WriteLegsCommands(myDes_left_leg_joints, myDes_right_leg_joints, *RobotDevices);
     }
 
     double t_IK_f = Time::now();

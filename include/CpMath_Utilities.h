@@ -314,6 +314,53 @@ class MatrixPseudoInverse2
             return svd.matrixV().leftCols(svdSize) *  (svd.singularValues().array().abs() > tolerance).select(svd.singularValues().array().inverse(), 0).matrix().asDiagonal() * svd.matrixU().leftCols(svdSize).adjoint();
         }
 
+        bool get_HhQRPseudoInverse(MatrixXd myMatrix, MatrixXd &PsdInvmyMatrix)
+        {
+
+            HouseholderQR<MatrixXd> qr(myMatrix.transpose());
+            PsdInvmyMatrix.setIdentity(myMatrix.cols(), myMatrix.rows());
+            PsdInvmyMatrix = qr.householderQ() * PsdInvmyMatrix;
+            PsdInvmyMatrix = qr.matrixQR().topLeftCorner(myMatrix.rows(),myMatrix.rows()).triangularView<Upper>().transpose().solve<OnTheRight>(PsdInvmyMatrix);
+
+            return true;
+
+        }
+
+        bool get_CODecomPseudoInverse(MatrixXd myMatrix, MatrixXd &PsdInvmyMatrix)
+        {
+            //
+            CompleteOrthogonalDecomposition<MatrixXd> cqr(myMatrix);
+            PsdInvmyMatrix = cqr.pseudoInverse();
+
+            return true;
+        }
+
+        bool get_LLTSolveInverse(MatrixXd myMatrix, MatrixXd &Inv_myMatrix)
+        {
+            //
+            Eigen::MatrixXd UnitMx = Eigen::MatrixXd::Identity(myMatrix.cols(), myMatrix.rows()); 
+            Inv_myMatrix = myMatrix.llt().solve(UnitMx);
+
+            return true;
+        }
+
+        bool get_LUSolveInverse(MatrixXd myMatrix, MatrixXd &Inv_myMatrix)
+        {
+            //
+            Eigen::MatrixXd UnitMx = Eigen::MatrixXd::Identity(myMatrix.cols(), myMatrix.rows()); 
+            Inv_myMatrix = myMatrix.lu().solve(UnitMx);
+
+            return true;
+        }
+        bool get_LDLTSolveInverse(MatrixXd myMatrix, MatrixXd &Inv_myMatrix)
+        {
+            //
+            Eigen::MatrixXd UnitMx = Eigen::MatrixXd::Identity(myMatrix.cols(), myMatrix.rows()); 
+            Inv_myMatrix = myMatrix.ldlt().solve(UnitMx);
+
+            return true;
+        }
+
 };
 
 

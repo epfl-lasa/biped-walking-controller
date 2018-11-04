@@ -24,6 +24,19 @@
 
 #include "RobotModel.h"
 
+Matrix4d yarpPose2EigenHmatrix(yarp::sig::Vector yarpPoseVect)
+{
+	Matrix4d H_out; 	H_out.setIdentity(4,4);
+	// position
+	H_out.block<3,1>(0,3) << yarpPoseVect[0], yarpPoseVect[1], yarpPoseVect[2];
+	// Orientation
+	Eigen::Vector3d Axis;
+	Axis << yarpPoseVect[3], yarpPoseVect[4], yarpPoseVect[5];
+	H_out.block<3,3>(0,0) = Eigen::AngleAxisd(yarpPoseVect[6], Axis).toRotationMatrix();
+
+	return H_out;
+}
+
 // ==========================================================================
 
 RobotKinematics::RobotKinematics(ControlledDevices &botDevices): LeftLegChain(0)
@@ -368,6 +381,238 @@ void RobotKinematics::UpdateLegsJointsStates(yarp::sig::Vector encoders_left_leg
 
 }
 
+// ====================================================================================================
+// INVERSE KINEMACIS
+// ====================================================================================================
+
+InverseKinematicsSolver::InverseKinematicsSolver(){}
+
+InverseKinematicsSolver::~InverseKinematicsSolver(){}
+
+void InverseKinematicsSolver::InitializeIK(iCub::iKin::iKinChain *Chain_, double gain_, int count_max_, double epilon_, double step_)
+{
+	//
+	virtual_sampTime = step_;
+	// epsilon = 1e-4;
+	// count_max  = 10;
+	// virtual_gain = 0.3;
+
+	epsilon 	 = epilon_;
+	count_max  	 = count_max_;
+	virtual_gain = gain_;
+	//
+	Chain = Chain_;
+	//
+	virtual_jts_velo.resize(Chain->getDOF());
+	//
+
+}
+
+// Vector of feature error
+VectorXd InverseKinematicsSolver::getPoseError_d_H_c(Matrix4d d_H_c)
+{
+    // extracrion of the rotation
+    Eigen::AngleAxisd d_AxisAngle_c(d_H_c.block<3,3>(0,0));
+
+    Eigen::VectorXd d_eta_c(6);
+    d_eta_c.segment(0,3) << d_H_c(0,3), d_H_c(1,3), d_H_c(2,3);
+
+    Eigen::Vector3d d_Axis_c = d_AxisAngle_c.axis();
+    d_eta_c(3) = d_Axis_c(0) * d_AxisAngle_c.angle();
+    d_eta_c(4) = d_Axis_c(1) * d_AxisAngle_c.angle();
+    d_eta_c(5) = d_Axis_c(2) * d_AxisAngle_c.angle();
+
+            
+    return d_eta_c;
+
+}
+//
+Matrix6d InverseKinematicsSolver::getInteractionMxForAxisAngle(MatrixXd d_H_c)
+{
+    /* This function computes the Jacobian associated with a rigid transformation
+     * represented as homogeneous transformation matrix from the current frame to
+     * the desired frame (d_H_c) and where the orientation is represented with an Axis/Angle
+     */
+
+    // Jacobian associated with the configuration error
+    MatrixXd Jac_Mu_Theta;
+
+    Jac_Mu_Theta.resize(6,6);
+    Jac_Mu_Theta.setZero(6,6);
+
+    // extracrion of the rotation
+    Eigen::AngleAxisd d_AxisAngle_c(d_H_c.block<3,3>(0,0));
+
+    // function sinc(theta) and sinc(theta/2)
+    double sinc_theta, sinc_theta_2;
+
+    sinc_theta   = sin(d_AxisAngle_c.angle() + 1e-6)/(d_AxisAngle_c.angle() + 1e-6);
+    sinc_theta_2 = sin((d_AxisAngle_c.angle() + 1e-6)/2.)/((d_AxisAngle_c.angle() + 1e-6)/2.);
+        
+    Matrix3d Skew_Mu;
+    Skew_Mu.resize(3,3);
+    Skew_Mu.setZero(3,3);
+
+    Eigen::Vector3d d_Axis_c = d_AxisAngle_c.axis();
+    Skew_Mu(0,1) = -d_Axis_c(2);
+    Skew_Mu(0,2) =  d_Axis_c(1);
+    Skew_Mu(1,0) =  d_Axis_c(2);
+    Skew_Mu(1,2) = -d_Axis_c(0);
+    Skew_Mu(2,0) = -d_Axis_c(1);
+    Skew_Mu(2,1) =  d_Axis_c(0);
+
+    // Jacobian of the rotation
+    Matrix3d L_Mu_Theta;
+    L_Mu_Theta.resize(3,3);
+    L_Mu_Theta.setIdentity(3,3);
+
+    L_Mu_Theta = L_Mu_Theta - (d_AxisAngle_c.angle()/2.)* Skew_Mu + (1.-(sinc_theta/pow(sinc_theta_2, 2.))) * Skew_Mu * Skew_Mu;
+
+    // Building the overall jacobian
+    Matrix6d InteractionMx_Mu_Theta; InteractionMx_Mu_Theta.setZero();
+    InteractionMx_Mu_Theta.block<3,3>(0,0) = d_H_c.block<3,3>(0,0);
+    InteractionMx_Mu_Theta.block<3,3>(3,3) = L_Mu_Theta;
+
+    return InteractionMx_Mu_Theta;
+
+}
+
+yarp::sig::Vector InverseKinematicsSolver::get_IKsolution(yarp::sig::Vector desPose, yarp::sig::Vector encoders_chain_joints, bool isDirectJacobian)
+{
+	
+	// create a virtual joints vector
+	yarp::sig::Vector virt_chain_joints(encoders_chain_joints.size());
+	virt_chain_joints = CTRL_DEG2RAD *encoders_chain_joints;
+	// compute the homogeneous matrix of the desired eef pose wrt the base frame
+	Matrix4d b_H_d = yarpPose2EigenHmatrix(desPose);
+	//  homogeneous transformation related to the  current pose of the eef wrt the base
+	Matrix4d b_H_c;
+	// relative pose between the current and desired end effector
+	Matrix4d d_H_c;
+	//
+	Matrix6d eef_Rot6D_b;
+			 eef_Rot6D_b.setIdentity();
+	yarp::sig::Vector curPose(7);
+	//
+	int count = 0;
+
+	double error_norm = 1.0;
+		
+	// compute the pseudo inverse matrix
+    MatrixPseudoInverse2 MxPsdInv;
+
+    //
+    Vector6d gain_vector;   gain_vector.setOnes();
+   gain_vector.head(3) *= -2.0*virtual_gain;
+   gain_vector.tail(3) *= -virtual_gain;
+	//
+	while((count <= count_max) && (error_norm > epsilon))
+	{
+		
+		// update the chain with the virtual joints positions
+		Chain->setAng(virt_chain_joints);
+
+		// get the current end effector pose in the base frame
+		curPose = Chain->EndEffPose();
+		// get the homogeneous transformation related to the  current pose of the eef wrt the base
+		b_H_c = yarpPose2EigenHmatrix(curPose);
+		// get relative pose between the current and desired end effector
+		d_H_c = b_H_d.inverse() * b_H_c;
+
+		Matrix4d c_H_d = d_H_c.inverse();
+        Eigen::AngleAxisd orient_error(d_H_c.block<3,3>(0,0));
+
+		// compute the task error
+		Vector6d error_pose = getPoseError_d_H_c(d_H_c); // in desired : in current
+
+		// compute the norm of the error  // here psition and orientation (can be separared into two different norms)
+		error_norm = error_pose.norm();
+
+		// compute interaction matrix
+		Matrix6d L_eta_chain = getInteractionMxForAxisAngle(d_H_c);
+
+		// 6D rotation matrix from base to end effector
+		eef_Rot6D_b.block<3,3>(0,0) = b_H_c.block<3,3>(0,0).transpose();
+		eef_Rot6D_b.block<3,3>(3,3) = b_H_c.block<3,3>(0,0).transpose();
+
+		// compute the task jacobian 
+		// compute the chain jacobian
+		yarp::sig::Matrix yChain_Jacobian =  Chain->GeoJacobian();
+
+		// compute the joint veleocity
+		Eigen::MatrixXd b_Jacobian_Mx_eef(yChain_Jacobian.rows(), yChain_Jacobian.cols()); 
+		//
+		for (int row=0; row < yChain_Jacobian.rows(); row++) 
+		{
+		    for(int col=0; col < yChain_Jacobian.cols(); col++) 
+		    {
+		        b_Jacobian_Mx_eef(row, col) = yChain_Jacobian(row, col);
+		    }
+		}
+
+		// compute the joint veleocity
+		Eigen::MatrixXd Pseudo_Jacobian_task(b_Jacobian_Mx_eef.cols(),b_Jacobian_Mx_eef.rows());
+		Pseudo_Jacobian_task.setZero();
+
+		// 
+		if(isDirectJacobian)
+		{
+			// compute the joint veleocity : direct
+			Eigen::MatrixXd Jacobian_task = L_eta_chain * eef_Rot6D_b * b_Jacobian_Mx_eef;
+	        error_pose = gain_vector.asDiagonal() *error_pose;
+			//error_pose *= -virtual_gain;
+			virtual_jts_velo = Jacobian_task.colPivHouseholderQr().solve(error_pose);    				// QR
+
+		}
+		else
+		{
+			// compute the joint veleocity : indirect
+			Matrix6d 	inv_L_eta_chain;
+						inv_L_eta_chain.setZero();
+						inv_L_eta_chain.block<3,3>(0,0) = d_H_c.block<3,3>(0,0).transpose();
+			    		inv_L_eta_chain.block<3,3>(3,3) = MatrixXd::Identity(3,3);
+
+			Vector6d virtual_eef_velo = -virtual_gain * eef_Rot6D_b.transpose() * inv_L_eta_chain * error_pose;
+			// Vector6d virtual_eef_velo = -virtual_gain * error_pose;
+			// compute the pseudo inverse of the jacobian
+			MxPsdInv.get_HhQRPseudoInverse(b_Jacobian_Mx_eef, Pseudo_Jacobian_task);
+
+			// compute the virtual joints velocity
+			virtual_jts_velo = Pseudo_Jacobian_task * virtual_eef_velo;
+			// virtual_jts_velo = b_Jacobian_Mx_eef.colPivHouseholderQr().solve(virtual_eef_velo);   					// QR
+		}
+
+		// compute the joint position variation
+		Eigen::VectorXd delta_virtual_jts(virtual_jts_velo.rows());
+		delta_virtual_jts = virtual_jts_velo * virtual_sampTime;
+
+		// update the virtual joints positions
+		for(int i=0; i<virt_chain_joints.size(); i++)
+		{
+			virt_chain_joints[i] += delta_virtual_jts(i);
+
+			// set joint limits hard limits
+			if(virt_chain_joints[i] > (*Chain)(i).getMax()){  // upper limit
+
+				virt_chain_joints[i] = (*Chain)(i).getMax() - 0.01;
+
+			} else if(virt_chain_joints[i] < (*Chain)(i).getMin()){ // lower limit
+
+				virt_chain_joints[i] = (*Chain)(i).getMin() + 0.01;
+
+			} 
+
+		}
+		count++;
+		//
+		
+	}
+
+	// set the joints of the chain back to the encoders values
+	Chain->setAng(CTRL_DEG2RAD *encoders_chain_joints);
+
+	return virt_chain_joints;
+}
 
 // ====================================================================================
 

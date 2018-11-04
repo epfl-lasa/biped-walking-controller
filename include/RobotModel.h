@@ -58,7 +58,9 @@ using namespace yarp::os;
 using namespace std;
 using namespace Eigen;
 
-
+typedef Eigen::Matrix<double, 6, 1> Vector6d;
+typedef Eigen::Matrix<double, 4, 4> Matrix4d;
+typedef Eigen::Matrix<double, 6, 6> Matrix6d;
 // ==========================================================================
 
 class RobotKinematics
@@ -104,22 +106,6 @@ class RobotKinematics
     firstOrderIntegrator *Filter_rleg_jtsVelo; 
 
 	
-
-	// RobotDevices.iencs_left_leg->getEncoders(encoders_left_leg.data());
-	// RobotDevices.iencs_right_leg->getEncoders(encoders_right_leg.data());	// right leg
-
-	// // update the legs chains
-	// LeftLegChain->setAng(CTRL_DEG2RAD*encoders_left_leg);
-	// RightLegChain->setAng(CTRL_DEG2RAD*encoders_right_leg);
-
-	// // update the arms chains
-	// Left_Arm_Chain->setAng(CTRL_DEG2RAD  * encoders_left_arm);
-	// Right_Arm_Chain->setAng(CTRL_DEG2RAD * encoders_right_arm);
-
-	// // update the torso chain
-	// Torso_Chain->setAng(CTRL_DEG2RAD * encoders_torso);
-
-
 	RobotKinematics(ControlledDevices &botDevices);
 	~RobotKinematics();
 
@@ -179,6 +165,37 @@ class RobotKinematics
 								double dt,
 								bool useFilter);
 	
+};
+
+
+// ====================================================================================================
+// INVERSE KINEMACIS
+// ====================================================================================================
+class InverseKinematicsSolver
+{
+	public:
+
+
+		// other inverse kinematics solver
+		int count_max;
+		double epsilon;
+		double virtual_sampTime;
+		double virtual_gain;
+
+		VectorXd virtual_jts_velo;
+		iCub::iKin::iKinChain *Chain;
+
+		InverseKinematicsSolver();
+		~InverseKinematicsSolver();
+
+		void InitializeIK(iCub::iKin::iKinChain *Chain_, double gain_, int count_max_, double epilon_, double step_);
+		VectorXd getPoseError_d_H_c(Matrix4d d_H_c);
+		Matrix6d getInteractionMxForAxisAngle(MatrixXd d_H_c);
+		yarp::sig::Vector get_IKsolution(//iCub::iKin::iKinChain *Chain,
+										yarp::sig::Vector desPose, 
+										yarp::sig::Vector encoders_chain_joints, 
+										bool isDirectJacobian);
+
 };
 
 // =====================================================================================================

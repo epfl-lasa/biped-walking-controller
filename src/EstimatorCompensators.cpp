@@ -696,14 +696,9 @@ void StatesToInputCompensator::ComputeS2IFeedback(	 int TypeOfFeedback,
 	Y_velo(0) = VyComFeedback; 
 	R_velo(0) = WzComFeedback; 
 
-     cout <<" estimator ok up to here " << 1 << endl;
-
 	KF_VeloEstimatorX->update(X_velo);
 	KF_VeloEstimatorY->update(Y_velo);
-    cout <<" estimator ok up to here " << 11 << endl;
 	KF_VeloEstimatorR->update(R_velo);
-
-     cout <<" estimator ok up to here " << 2 << endl;
 
 	VxComFeedback =  this->gain_x * (KF_VeloEstimatorX->state())(1);
 	VyComFeedback =  this->gain_y * (KF_VeloEstimatorY->state())(1);
@@ -1706,19 +1701,12 @@ void StatesToInputCompensator::SetThreshold(VectorXd _Thrshld)
                 
 
 //               // States error (this is in the stance foot frame)
-//               //Model_statesX_error = StatesX_Obs;// - DMod->StatesX; //(0);//+CoPref->CoPRefY; // - DMod->StatesX;  // working: StatesX_Obs - DMod->StatesX;      
+//               //Model_statesX_error = StatesX_Obs;
               
-//               Model_statesX_error(0) = StatesX_Obs(0);//Abs_CoM(0); //
-//               Model_statesX_error(1) = StatesX_Obs(1);//Abs_VeloCoM(0); //Abs_CoM(0) + 1./DMod->W*Abs_VeloCoM(0); //StatesX_Obs(1);//
-//               //Model_statesX_error(1) = StatesX_Obs(1);//+CoPref->CoPRefY; //DMod->ZMP_Y; //0.*StatesY_Obs(1); // - DMod->StatesX;     
-//               Model_statesY_error(0) = StatesY_Obs(0); //DMod->W* DMod->W * m_yZMP; //  - DMod->StatesY; //DMod->B_Dist * m_disFy;  //StatesY_Obs;// 
-//               Model_statesY_error(1) = StatesY_Obs(1); // StatesY_Obs; // - DMod->StatesY; //DMod->B_Dist * m_disFy;  //StatesY_Obs;// 
-//               // Model_statesX_error(0) = m_yZMP;   // - DMod->StatesX;
-//               // Model_statesX_error(1) = m_TauZ;     
-
-//               // Model_statesR_error(0) = 0.0;
-//               // Model_statesR_error(1) = 0.0;
-//               // Model_statesR_error(2) = -K_Wdot * m_TauZ;
+//               Model_statesX_error(0) = StatesX_Obs(0);
+//               Model_statesX_error(1) = StatesX_Obs(1);   
+//               Model_statesY_error(0) = StatesY_Obs(0); 
+//               Model_statesY_error(1) = StatesY_Obs(1); 
 //               Model_statesR_error.segment(0,2) = R_motion.getRK4Solution(-K_Wdot * m_TauZ * 2.0); //1.4
 //               Model_statesR_error(2) = -0.*Model_statesR_error(0) - 10.0 * Model_statesR_error(1) - 1.*K_Wdot * m_TauZ;
               
