@@ -63,10 +63,7 @@ Running this controller in its current version is still quite elaborate.
 ```
 $ yarpserver
 ```
-- (simulation) start gazebo simulator and import include the robot model (`iCub (no hands)`), in another terminal type the following:
-```
-$ yarpserver
-```
+- (simulation) start gazebo simulator and import include the robot model (`iCub (no hands)`)
 
 - Bring the robot in home position 
 ```
