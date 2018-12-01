@@ -36,8 +36,8 @@ For simulation
 - [gazebo_yarp_plugins](https://github.com/robotology/gazebo-yarp-plugins)
 - [icub-gazebo](https://github.com/robotology/icub-gazebo)
 
-### Known issues
-- YARP need CMake version >3.5, if you have Ubuntu 14.04, this can be installed by following the instructions [here](https://www.claudiokuenzler.com/blog/755/install-upgrade-cmake-3.10.1-ubuntu-14.04-trusty-alternatives#.XAKUHxgnapo)
+#### Known Installation Issues
+- YARP needs CMake version >3.5, if you have Ubuntu 14.04, this can be installed by following the instructions [here](https://www.claudiokuenzler.com/blog/755/install-upgrade-cmake-3.10.1-ubuntu-14.04-trusty-alternatives#.XAKUHxgnapo)
 
 ---
 
