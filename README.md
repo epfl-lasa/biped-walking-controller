@@ -72,6 +72,7 @@ $ yarpserver
 ```
 - (simulation) start gazebo simulator and import include the robot model (`iCub (no hands)`)
 ```
+$ cd ~/robotology-superbuild/robotology
 $ gazebo ./icub-gazebo/worlds/icub.world
 ```
 
