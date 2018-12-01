@@ -7,18 +7,21 @@ find_package(Eigen3 REQUIRED)
 find_package(wholeBodyInterface REQUIRED)
 find_package(yarpWholeBodyInterface 0.2.2 REQUIRED)
 find_package(iDynTree REQUIRED)
-
 find_package(Curses REQUIRED)
 
-find_library(libqpOASES NAMES libqpOASES.so PATHS "~/icub/software/src/robotology-superbuild/build/install/lib/")
-
+find_library(libqpOASES NAMES libqpOASES.a PATHS "/usr/local/lib/")
 list(APPEND CMAKE_MODULE_PATH "/usr/local/include/eigen3")
 
 set(SRC_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(HEADERS_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 set(EIGEN_INCLUDE_DIR "/usr/include/eigen3")
-set(qpOASES_DIR "~/icub/software/src/robotology-superbuild/build/external/qpOASES")
+set(qpOASES_DIR "/home/nbfigueroa/yarp_ws/qpOASES-3.2.1")
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 
 include_directories(${qpOASES_DIR}/include)
 
