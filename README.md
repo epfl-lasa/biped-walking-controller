@@ -38,6 +38,7 @@ For simulation
 
 #### Known Installation Issues
 - YARP needs CMake version >3.5, if you have Ubuntu 14.04, this can be installed by following the instructions [here](https://www.claudiokuenzler.com/blog/755/install-upgrade-cmake-3.10.1-ubuntu-14.04-trusty-alternatives#.XAKUHxgnapo)
+- If you're trying to install YARP in Ubuntu 14.04 with ROS-Indigo installed in it, you will probably get a compiling error regarding yarpcar_xmlrpc component, solution is found [here](https://github.com/robotology/yarp/issues/1323)
 
 ---
 
