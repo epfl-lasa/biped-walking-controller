@@ -29,7 +29,7 @@ Prior the compilation of this controller, make sure you have installed the follo
 - [ICUB](https://github.com/robotology/icub-main)
 - [Eigen3]()
 - [qpOASES](https://projects.coin-or.org/qpOASES/wiki/QpoasesInstallation)
-- [yarpWholeBodyInterface ](https://github.com/robotology/yarp-wholebodyinterface)
+- [yarpWholeBodyInterface](https://github.com/robotology/yarp-wholebodyinterface)
 
 For simulation
 - [Gazebo](http://gazebosim.org/tutorials?tut=install_ubuntu&cat=install)
@@ -39,6 +39,7 @@ For simulation
 #### Known Installation Issues
 - YARP needs CMake version >3.5, if you have Ubuntu 14.04, this can be installed by following the instructions [here](https://www.claudiokuenzler.com/blog/755/install-upgrade-cmake-3.10.1-ubuntu-14.04-trusty-alternatives#.XAKUHxgnapo)
 - If you're trying to install YARP in Ubuntu 14.04 with ROS-Indigo installed in it, you will probably get a compiling error regarding yarpcar_xmlrpc component, solution is found [here](https://github.com/robotology/yarp/issues/1323)
+- Eigen 3 version >3.2.9 is necessary [yarpWholeBodyInterface](https://github.com/robotology/yarp-wholebodyinterface), to install it in Ubuntu 14.04, follow instructions [here][]
 
 ---
 
