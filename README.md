@@ -36,7 +36,7 @@ For simulation
 - [gazebo_yarp_plugins](https://github.com/robotology/gazebo-yarp-plugins)
 - [icub-gazebo](https://github.com/robotology/icub-gazebo)
 
-#### Known Installation Issues (and solutions) for Ubuntu 14.04
+#### Known Installation Issues (and solutions) for Ubuntu 14.04 [Not working, Ubuntu 16 is needed!]
 - YARP needs CMake version >3.5, if you have Ubuntu 14.04, this can be installed by following the instructions [here](https://www.claudiokuenzler.com/blog/755/install-upgrade-cmake-3.10.1-ubuntu-14.04-trusty-alternatives#.XAKUHxgnapo)
 - If you're trying to install YARP in Ubuntu 14.04 with ROS-Indigo installed in it, you will probably get a compiling error regarding yarpcar_xmlrpc component, solution is found [here](https://github.com/robotology/yarp/issues/1323)
 - Eigen 3 version >=3.2.9 is necessary [yarpWholeBodyInterface](https://github.com/robotology/yarp-wholebodyinterface), you should install it from source, follow instructions [here](https://github.com/eigenteam/eigen-git-mirror)
