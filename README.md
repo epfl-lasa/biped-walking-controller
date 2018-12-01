@@ -41,7 +41,7 @@ For simulation
 - If you're trying to install YARP in Ubuntu 14.04 with ROS-Indigo installed in it, you will probably get a compiling error regarding yarpcar_xmlrpc component, solution is found [here](https://github.com/robotology/yarp/issues/1323)
 - Eigen 3 version >=3.2.9 is necessary [yarpWholeBodyInterface](https://github.com/robotology/yarp-wholebodyinterface), you should install it from source, follow instructions [here](https://github.com/eigenteam/eigen-git-mirror)
 - GCC/G++ version >=5 is necessary, to install follow instructions [here](https://gist.github.com/beci/2a2091f282042ed20cda)
-- Before [gazebo_yarp_plugins](https://github.com/robotology/gazebo-yarp-plugins) needs Boost version >=1.55, Ubuntu 14.04 comes with version 1.54. To upgrade boost by follow instructions [here](https://codeyarns.com/2013/12/27/how-to-upgrade-the-boost-library-on-ubuntu/).
+- [gazebo_yarp_plugins](https://github.com/robotology/gazebo-yarp-plugins) needs Boost version >=1.55, Ubuntu 14.04 comes with version 1.54. To upgrade boost by follow instructions [here](https://codeyarns.com/2013/12/27/how-to-upgrade-the-boost-library-on-ubuntu/).
 - Gazebo7 and libgazebo7: [installation instructions](http://gazebosim.org/tutorials?cat=install&tut=install_ubuntu&ver=7.0)
 ---
 
