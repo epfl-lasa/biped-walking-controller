@@ -59,11 +59,25 @@ $ cmake .. && make
 ## Running the controller
 Running this controller in its current version is still quite elaborate. 
 
-- start yarpserver
-- (simulation) start gazebo simulator and import include the robot model (`iCub (no hands)`)
-- Bring the robot in home position (e.g. `$ yarpmotorgui --from homePoseBalancing.ini --robot robot_name (e.g. icub or icubSim)` and then press the 'Home All' button)
-- Launch the controller as follows : `$ ./WalkingGrasping --from ../config/BalanceWalkingController.ini`
+- start yarpserver, in one terminal type the following
+```
+$ yarpserver
+```
+- (simulation) start gazebo simulator and import include the robot model (`iCub (no hands)`), in another terminal type the following:
+```
+$ yarpserver
+```
 
+- Bring the robot in home position 
+```
+$ yarpmotorgui --from homePoseBalancing.ini --robot robot_name 
+```
+robot_name: (e.g. icub or icubSim) and then press the 'Home All' button
+
+- Launch the controller as follows : 
+```
+$ ./WalkingGrasping --from ../config/BalanceWalkingController.ini
+```
 
 ---
 
@@ -71,7 +85,6 @@ Running this controller in its current version is still quite elaborate.
 ## Expected behavior
 
 The behavior of the controller is  demonstrated [here](https://www.youtube.com/watch?v=9hKOVHDDnfc&t=16s)
-
 
 ---
 
