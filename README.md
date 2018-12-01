@@ -29,7 +29,7 @@ Install the dependencies
 Prior the compilation of this controller, make sure you have installed the following software:
 - [YARP](https://github.com/robotology/yarp)
 - [ICUB](https://github.com/robotology/icub-main) (Install from sources!)
-- [Eigen3](): Eigen 3 version >=3.2.9 is necessary [yarpWholeBodyInterface](https://github.com/robotology/yarp-wholebodyinterface), you should install it from source, follow instructions [here](https://github.com/eigenteam/eigen-git-mirror)
+- [Eigen3](): Eigen 3 version >=3.2.9 is necessary for [yarpWholeBodyInterface](https://github.com/robotology/yarp-wholebodyinterface), you should install it from source, follow instructions [here](https://github.com/eigenteam/eigen-git-mirror)
 - [qpOASES](https://projects.coin-or.org/qpOASES/wiki/QpoasesInstallation)
 - [yarpWholeBodyInterface](https://github.com/robotology/yarp-wholebodyinterface)
 
