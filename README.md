@@ -26,7 +26,7 @@ Install the dependencies
 
 Prior the compilation of this controller, make sure you have installed the following software:
 - [YARP](https://github.com/robotology/yarp)
-- [ICUB](https://github.com/robotology/icub-main)
+- [ICUB](https://github.com/robotology/icub-main) (Install from sources!)
 - [Eigen3]()
 - [qpOASES](https://projects.coin-or.org/qpOASES/wiki/QpoasesInstallation)
 - [yarpWholeBodyInterface](https://github.com/robotology/yarp-wholebodyinterface)
