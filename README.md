@@ -11,6 +11,8 @@ The robot under this walking controller can be driven in two mode:
 For more details see [Capture-point based balance and reactive omnidirectional walking controller](https://ieeexplore.ieee.org/document/8239532)
 
 ---
+## System Requirements
+Ubuntu 16.04 and Gazebo >=7
 
 ## Compilation and build
 
