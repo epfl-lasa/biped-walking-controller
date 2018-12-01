@@ -71,6 +71,9 @@ Running this controller in its current version is still quite elaborate.
 $ yarpserver
 ```
 - (simulation) start gazebo simulator and import include the robot model (`iCub (no hands)`)
+```
+$ gazebo ./icub-gazebo/worlds/icub.world
+```
 
 - Bring the robot in home position 
 ```
