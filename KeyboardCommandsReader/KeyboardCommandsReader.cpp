@@ -108,42 +108,50 @@ class KeyboardCommandsReader : public yarp::os::RateThread
                             case KEY_UP:
 
                                 vx_factor = increment;
+                                std::cout << "vx_factor" << vx_factor << std::endl;
 
                             break;
 
                             case KEY_DOWN:
                                            
                                      vx_factor = -increment;
+                                     std::cout << "vx_factor" << vx_factor << std::endl;
                             break;
 
                             case KEY_LEFT:
                                            
                                     vy_factor = increment;
+                                    std::cout << "vy_factor" << vy_factor << std::endl;
                             break;
 
                             case KEY_RIGHT:    
                                             
                                     vy_factor = -increment;
+                                    std::cout << "vy_factor" << vy_factor << std::endl;
                             break;
 
                             case 68:  //  CLOCKWISE
                                             
                                     wz_factor = increment;
+                                    std::cout << "wz_factor" << wz_factor << std::endl;
                             break;
 
                             case 100: // CLOCKWISE
                                             
                                     wz_factor = increment;
+                                    std::cout << "wz_factor" << wz_factor << std::endl;
                             break;
 
                             case 65:   // ANTICLOCKWISE   
                                             
                                     wz_factor = -increment;
+                                    std::cout << "wz_factor" << wz_factor << std::endl;
                             break;
 
                             case 97:   // ANTICLOCKWISE
                                             
                                     wz_factor = -increment;
+                                    std::cout << "wz_factor" << wz_factor << std::endl;
                             break;
 
                             default:
@@ -166,10 +174,10 @@ class KeyboardCommandsReader : public yarp::os::RateThread
             }
             else
             {
-                
-                vx_factor = 0.0; //vx_factor;
-                vy_factor = 0.0; //vy_factor;
-                wz_factor = 0.0; //wz_factor;
+                // IDK why you are doing this, when I remove it, it kind of works
+                // vx_factor = 0.0; //vx_factor;
+                // vy_factor = 0.0; //vy_factor;
+                // wz_factor = 0.0; //wz_factor;
                 refresh();
             }
             
@@ -202,7 +210,6 @@ int main(int argc, char **argv)
     
     rf.setVerbose(true);                                        //logs searched directories
     rf.setDefaultConfigFile("KeyboardCommandsReader.ini");        //default config file name.
-    //rf.setDefaultContext("KeyboardCommandsReader");             //when no parameters are given to the module this is the default context
     rf.configure(argc, argv);
     
     if (rf.check("help")) 
@@ -222,7 +229,7 @@ int main(int argc, char **argv)
     std::string robotName  = rf.check("robot", Value("icub"), "Looking for robot name").asString();
     int ReaderThreadPeriod = rf.check("period", Value(40), "Looking for controller period").asInt();
     double modulePeriod = rf.check("modulePeriod", Value(0.25), "Looking for module period").asDouble();
-    double variation = rf.check("variation", Value(0.005), "Looking for module period").asDouble();
+    double variation = rf.check("variation", Value(0.001), "Looking for velocity variation (increment)").asDouble();
 
     //int ReaderThreadPeriod = rf.find("period").asInt();
 

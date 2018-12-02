@@ -219,44 +219,9 @@ int main(int argc, char **argv) //(int argc, char *argv[])
     while(!(done && finalConf) && !myThread.StopCtrl)
     {
 
-        // if (!noInput && (myThread.Des_RelativeVelocity(0)== 0.00)
-        //              && (myThread.Des_RelativeVelocity(1)== 0.00)
-        //              && (myThread.Des_RelativeVelocity(2)== 0.00))
-        // {
-        //     noInput = !noInput;  // from false to true
-        //     FinalMoveTime = Time::now();
-
-        //     n_Samp_init = 2*(n_Samp1 - 1) - myThread.CpBalWlkController->SMx->IndexSFt; // 2*
-
-        //     myThread.Des_RelativeVelocity(0) = 0.00;
-        //     myThread.Des_RelativeVelocity(1) = 0.00;
-        //     myThread.Des_RelativeVelocity(2) = 0.00;
-
-        // }
-        // if (noInput)
-        // {
-        //     myThread.Des_RelativeVelocity(0) = 0.00;
-        //     myThread.Des_RelativeVelocity(1) = 0.00;
-        //     myThread.Des_RelativeVelocity(2) = 0.00;
-        // }
-
-        // if (noInput && ((Time::now()-FinalMoveTime)>= (n_Samp_init * myThread.Parameters->SamplingTime)))
-        // {
-        //     AlignFeet = true;
-        //     cout << " Pause the walking " << endl;
-
-        //     noInput = !noInput;
-
-        //     myThread.PauseWalking = AlignFeet;
-        // }
-        // else
-        // {
-        //     AlignFeet = false;
-        //     myThread.PauseWalking = AlignFeet;
-        // }
-
         if(myThread.KeyboardCtrl) //((c= getch())!=27)
         {   
+
             // forward and backward walking 
             // -----------------------------         
             if(myThread.alpha_velo(0)> 0.0)
@@ -298,7 +263,7 @@ int main(int argc, char **argv) //(int argc, char *argv[])
             if(myThread.alpha_velo(2)> 0.0)
             {
                 if(wz_factor >= 1.0) { wz_factor = 1.0; }
-                else { wz_factor += myThread.alpha_velo(2); }
+                else { wz_factor += myThread.alpha_velo(2)*0.0001; }
             }
             else if(myThread.alpha_velo(2)== 0.0)
             {
@@ -314,13 +279,18 @@ int main(int argc, char **argv) //(int argc, char *argv[])
             myThread.Des_RelativeVelocity(0) = 0.10 * vx_factor;
             myThread.Des_RelativeVelocity(1) = 0.10 * vy_factor;
             myThread.Des_RelativeVelocity(2) = 0.20 * wz_factor;
+
+
+            // Send fixed desired COM velocity to controller
+            // myThread.Des_RelativeVelocity(0) = 0.05;
+            // myThread.Des_RelativeVelocity(1) = 0.0;
+            // myThread.Des_RelativeVelocity(2) = 0.0;
+
+
         }
         else
         {
             // Set the Desired CoM velocity
-            // myThread.Des_RelativeVelocity(0) = 0.06 * vx_factor;
-            // myThread.Des_RelativeVelocity(1) = 0.06 * vy_factor;
-            // myThread.Des_RelativeVelocity(2) = 0.08 * wz_factor;
             vx_factor = 0.0;
             vy_factor = 0.0;
             wz_factor = 0.0;
@@ -358,12 +328,9 @@ int main(int argc, char **argv) //(int argc, char *argv[])
             finalConf = true;
 
             cout << " Feet Alignment done, Now closing " << endl;
-        }
-
+        }    
 
     }
-
-    //endwin();
 
 
     // Set to Zero the Desired CoM velocity before stoping

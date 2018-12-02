@@ -130,7 +130,6 @@ bool CpBalWlkCtrlThread::threadInit()
         keyboardValues  = KeyboardCmd_port_In.read(); 
         alpha_velo.resize(keyboardValues->size());
         alpha_velo.setZero();
-        //
         iskeypportActive = true;
     }
 
@@ -610,19 +609,12 @@ void CpBalWlkCtrlThread::run()
 
     cout << "Iteration : " << CycleCounter +1 << endl;
 
-    // check if the keyboard port is activate, if not, connected to it
-    // KeyboardCtrl     = false;
-    // iskeypportActive = false;
-
-    // if(KeyboardCtrl)
-    // {
-
-    // }
-        
-
 
     // -------------------------------------------------------------------
     double t_run = Time::now();
+
+    // printf("Keyboard Velocity vx:%4.6f vy:%4.6f  wz:%4.6f \n", alpha_velo(0) , alpha_velo(1), alpha_velo(2));
+    printf("Desired Relative Velocity vx:%4.6f vy:%4.6f  wz:%4.6f \n", Des_RelativeVelocity(0), Des_RelativeVelocity(1), Des_RelativeVelocity(2));
 
     CpBalWlkController->UpdateCpBalWlkController(Parameters, Des_RelativeVelocity+Feedback_RelativeVelocity, CycleCounter);
 
@@ -864,6 +856,7 @@ void CpBalWlkCtrlThread::run()
     if(KeyboardCtrl)
     {
         keyboardValues  = KeyboardCmd_port_In.read(); 
+
         // Extract the read value
         alpha_velo(0) = keyboardValues->get(0).asDouble();
         alpha_velo(1) = keyboardValues->get(1).asDouble();
