@@ -22,7 +22,7 @@ int mysign(double Val)
 }
 
 
-CpBalWlkCtrlThread::CpBalWlkCtrlThread(int period, std::string _moduleName, std::string _robotName, int ForceFeedback, wbi::wholeBodyInterface& robot)
+CpBalWlkCtrlThread::CpBalWlkCtrlThread(int period, std::string _moduleName, std::string _robotName, int ForceFeedback, bool ActiveKeyBoardCtrl_, wbi::wholeBodyInterface& robot)
 													: RateThread(period)
 													, moduleName(_moduleName)
 													, robotName(_robotName)
@@ -38,6 +38,7 @@ CpBalWlkCtrlThread::CpBalWlkCtrlThread(int period, std::string _moduleName, std:
                                                     , Des_RelativeVelocity(3)
                                                     , Feedback_RelativeVelocity(3)
                                                     , m_world2BaseFrameSerialization(16)
+                                                    , KeyboardCtrl(ActiveKeyBoardCtrl_)
 				                                    , StopCtrl(false) 	{ 	ThreadPeriod = period; 
 				                                    						ForceFeedbackType = ForceFeedback; 
 				                                    					}
@@ -76,7 +77,6 @@ bool CpBalWlkCtrlThread::threadInit()
     writeCommands = Parameters->Command_exe;
 
     //
-    //
     start_time = yarp::os::Time::now();
 
     // ===================================================================
@@ -107,6 +107,32 @@ bool CpBalWlkCtrlThread::threadInit()
     // get IMU measurements
     BotSensors.getImuOrientationValues();
     BotSensors.getImuAccelerometerValues();
+
+    // keyboard control
+    // KeyboardCtrl  = false;
+    iskeypportActive = false;
+
+    //Opening the port for the Keyboard input cmds  moduleName
+    std::string KeyboardOutputs_port ="/";
+                KeyboardOutputs_port += moduleName;
+                KeyboardOutputs_port += "/keyboardOutputs:o";
+
+    if(KeyboardCtrl && !iskeypportActive)
+    {
+        KeyboardCmd_port_In.open("/KeyboardInputCmds:i");
+
+        if(!Network::connect(KeyboardOutputs_port.c_str(), KeyboardCmd_port_In.getName().c_str()))
+        {
+            printf(" Unable to connect to the KeyboardCmdsReaderModule port");
+            return false;
+        }
+        // Reading of measurement
+        keyboardValues  = KeyboardCmd_port_In.read(); 
+        alpha_velo.resize(keyboardValues->size());
+        alpha_velo.setZero();
+        //
+        iskeypportActive = true;
+    }
 
 
     // correction of joints_offset betwen the simulator and the actual robot
@@ -175,8 +201,8 @@ bool CpBalWlkCtrlThread::threadInit()
     // RobotKin->InitLeftLegInvKin();
     // RobotKin->InitRightLegInvKin();
     // inverse kinematics iterative gradient based
-    InvKinSolver_lleg.InitializeIK(RobotKin->LeftLegChain,  0.90, 12, 1e-4, 0.450);
-    InvKinSolver_rleg.InitializeIK(RobotKin->RightLegChain, 0.90, 12, 1e-4, 0.450);
+    InvKinSolver_lleg.InitializeIK(RobotKin->LeftLegChain,  0.90, 20, 1e-4, 0.450);
+    InvKinSolver_rleg.InitializeIK(RobotKin->RightLegChain, 0.90, 20, 1e-4, 0.450);
 
     // *******************************************************************************************
     // Instantiation of the robot locomotion module
@@ -485,6 +511,13 @@ void CpBalWlkCtrlThread::threadRelease()
     // close the data Logger
     DataLogger.Close_files();
 
+    // closing the keyboard reader
+    if(KeyboardCtrl)
+    {
+        KeyboardCmd_port_In.close();
+    }
+    
+
     // release the CpWalkingController
     CpBalWlkController->ReleaseCpBalWlkController();
 
@@ -577,6 +610,18 @@ void CpBalWlkCtrlThread::run()
 
     cout << "Iteration : " << CycleCounter +1 << endl;
 
+    // check if the keyboard port is activate, if not, connected to it
+    // KeyboardCtrl     = false;
+    // iskeypportActive = false;
+
+    // if(KeyboardCtrl)
+    // {
+
+    // }
+        
+
+
+    // -------------------------------------------------------------------
     double t_run = Time::now();
 
     CpBalWlkController->UpdateCpBalWlkController(Parameters, Des_RelativeVelocity+Feedback_RelativeVelocity, CycleCounter);
@@ -773,10 +818,19 @@ void CpBalWlkCtrlThread::run()
         // -------------------------------------------------
         BotSensors.getLeftArmForceTorqueValues();
         BotSensors.getRightArmForceTorqueValues();
+
         // Compute the initial state to inout feedback
+        Eigen::VectorXd EstimatedFeet_FT(12);
+        Eigen::VectorXd EstimatedArm_FT(12);
+        EstimatedFeet_FT.head(6) = BotSensors.l_foot_FT_vector;
+        EstimatedFeet_FT.tail(6) = BotSensors.r_foot_FT_vector;
+
+        EstimatedArm_FT.head(6) = BotSensors.l_arm_FT_vector;
+        EstimatedArm_FT.tail(6) = BotSensors.r_arm_FT_vector;
+
         St2InCompensator.ComputeS2IFeedback(Parameters->FT_feedback, 
-                                            BotSensors.l_arm_FT_vector, 
-                                            BotSensors.r_arm_FT_vector, 
+                                            EstimatedFeet_FT, 
+                                            EstimatedArm_FT, 
                                             BotSensors.Arms_ForceTorqueOffset);
         
         // assign velocity feedback
@@ -804,6 +858,18 @@ void CpBalWlkCtrlThread::run()
     Test_Data.setZero(2);
     Test_Data(0) = t_IK_f-t_run;
     Test_Data(1) = t_IK_f-t_IK_0; 
+
+    // **************************************
+    // reading the keyboard inputs
+    if(KeyboardCtrl)
+    {
+        keyboardValues  = KeyboardCmd_port_In.read(); 
+        // Extract the read value
+        alpha_velo(0) = keyboardValues->get(0).asDouble();
+        alpha_velo(1) = keyboardValues->get(1).asDouble();
+        alpha_velo(2) = keyboardValues->get(2).asDouble();
+
+    }
 
     DataLogger.Write_Data(Parameters->SamplingTime,
                          CycleCounter,

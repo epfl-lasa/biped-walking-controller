@@ -12,6 +12,8 @@ InitBalWlkParameters::InitBalWlkParameters(int period, const std::string robotNa
                                 // 1 : for states X(k)=[com com_dot]           Cp = [1 1/W] * X(k) 
                                 // 2 : for states X(k)=[com com_dot com_ddot]  Cp = [1 1/W 0] * X(k)
 
+  RobotName     = robotName;
+
   if (period == 100)
   {
       SamplingTime  = 0.10;

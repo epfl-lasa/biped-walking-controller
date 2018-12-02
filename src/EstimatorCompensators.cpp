@@ -658,9 +658,9 @@ void StatesToInputCompensator::ComputeS2IFeedback(	 int TypeOfFeedback,
 
 
 			// Apply admittance law to convert Estimated forces/torques at the arms into velocity
-			VxComFeedback = X_motionDyn.getRK4Solution(EstimatedArmsForce(0) - arm_FT_offset(0))(1);  // arm_FT_offset(0): X
-			VyComFeedback = Y_motionDyn.getRK4Solution(EstimatedArmsForce(1) - arm_FT_offset(1))(1);  // arm_FT_offset(1): Y
-			WzComFeedback = R_motionDyn.getRK4Solution(EstimatedArmsForce(2) - arm_FT_offset(2))(1);  // arm_FT_offset(2): R
+			VxComFeedback = X_motionDyn.getRK4Solution( 0.25*(EstimatedArmsForce(0)+EstimatedArmsForce(0+6)) - arm_FT_offset(0))(1);  // arm_FT_offset(0): X
+			VyComFeedback = Y_motionDyn.getRK4Solution(-0.25*(EstimatedArmsForce(1)+EstimatedArmsForce(1+6)) - arm_FT_offset(1))(1);  // arm_FT_offset(1): Y
+			WzComFeedback = R_motionDyn.getRK4Solution(EstimatedArmsForce(5)+EstimatedArmsForce(5+6) - arm_FT_offset(2))(1);          // arm_FT_offset(2): R
 
 			// VxComFeedback = FilterStatesX->getRK4Integral(VxComFeedback);
 			// VyComFeedback = FilterStatesY->getRK4Integral(VyComFeedback);

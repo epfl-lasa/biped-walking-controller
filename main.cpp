@@ -146,6 +146,7 @@ int main(int argc, char **argv) //(int argc, char *argv[])
     int period          = rf.check("period", Value(40), "Looking for controller period").asInt();
     double RunDuration   = rf.check("duration", Value(5), "Looking for Running Duration ").asDouble();
     int FT_feedbackType  = rf.check("FT_feedback", Value(0), "Looking for Running Duration ").asInt();
+    int KeyBoardCommand = rf.check("KeyBoardCommand", Value(0), "Looking for keyboard input ").asInt();
 
     Eigen::Vector3d InitVelocity;
     InitVelocity(0) = rf.check("VelocityX", Value(0.10), "Looking for forward velocity ").asDouble();
@@ -171,10 +172,20 @@ int main(int argc, char **argv) //(int argc, char *argv[])
         return -1;
     }
 
-    Time::delay(0.5);     
+    Time::delay(0.5);   
+
+    // control of the robot through keyboard
+    bool ActiveKeyBoardCtrl = false;
+    if(KeyBoardCommand == 1)
+    {
+        ActiveKeyBoardCtrl = true;
+    }
+    else{
+        ActiveKeyBoardCtrl = false;
+    }  
 
     // instantiate the 
-    CpBalWlkCtrlThread myThread(period, m_moduleName, m_robotName, FT_feedbackType, *robot); //period is 40ms
+    CpBalWlkCtrlThread myThread(period, m_moduleName, m_robotName, FT_feedbackType, ActiveKeyBoardCtrl, *robot); //period is 40ms
 
     // Starting the BalanceWalkingController Thread
     myThread.start();
@@ -199,83 +210,155 @@ int main(int argc, char **argv) //(int argc, char *argv[])
     bool AlignFeet = false;
     bool noInput   = false;
 
+    double vx_factor = 0.0;
+    double vy_factor = 0.0;
+    double wz_factor = 0.0;
+
     // =================================
 
     while(!(done && finalConf) && !myThread.StopCtrl)
     {
 
-            // if (!noInput && (myThread.Des_RelativeVelocity(0)== 0.00)
-            //              && (myThread.Des_RelativeVelocity(1)== 0.00)
-            //              && (myThread.Des_RelativeVelocity(2)== 0.00))
-            // {
-            //     noInput = !noInput;  // from false to true
-            //     FinalMoveTime = Time::now();
+        // if (!noInput && (myThread.Des_RelativeVelocity(0)== 0.00)
+        //              && (myThread.Des_RelativeVelocity(1)== 0.00)
+        //              && (myThread.Des_RelativeVelocity(2)== 0.00))
+        // {
+        //     noInput = !noInput;  // from false to true
+        //     FinalMoveTime = Time::now();
 
-            //     n_Samp_init = 2*(n_Samp1 - 1) - myThread.CpBalWlkController->SMx->IndexSFt; // 2*
+        //     n_Samp_init = 2*(n_Samp1 - 1) - myThread.CpBalWlkController->SMx->IndexSFt; // 2*
 
-            //     myThread.Des_RelativeVelocity(0) = 0.00;
-            //     myThread.Des_RelativeVelocity(1) = 0.00;
-            //     myThread.Des_RelativeVelocity(2) = 0.00;
+        //     myThread.Des_RelativeVelocity(0) = 0.00;
+        //     myThread.Des_RelativeVelocity(1) = 0.00;
+        //     myThread.Des_RelativeVelocity(2) = 0.00;
 
-            // }
-            // if (noInput)
-            // {
-            //     myThread.Des_RelativeVelocity(0) = 0.00;
-            //     myThread.Des_RelativeVelocity(1) = 0.00;
-            //     myThread.Des_RelativeVelocity(2) = 0.00;
-            // }
+        // }
+        // if (noInput)
+        // {
+        //     myThread.Des_RelativeVelocity(0) = 0.00;
+        //     myThread.Des_RelativeVelocity(1) = 0.00;
+        //     myThread.Des_RelativeVelocity(2) = 0.00;
+        // }
 
-            // if (noInput && ((Time::now()-FinalMoveTime)>= (n_Samp_init * myThread.Parameters->SamplingTime)))
-            // {
-            //     AlignFeet = true;
-            //     cout << " Pause the walking " << endl;
+        // if (noInput && ((Time::now()-FinalMoveTime)>= (n_Samp_init * myThread.Parameters->SamplingTime)))
+        // {
+        //     AlignFeet = true;
+        //     cout << " Pause the walking " << endl;
 
-            //     noInput = !noInput;
+        //     noInput = !noInput;
 
-            //     myThread.PauseWalking = AlignFeet;
-            // }
-            // else
-            // {
-            //     AlignFeet = false;
-            //     myThread.PauseWalking = AlignFeet;
+        //     myThread.PauseWalking = AlignFeet;
+        // }
+        // else
+        // {
+        //     AlignFeet = false;
+        //     myThread.PauseWalking = AlignFeet;
+        // }
 
-            // }
+        if(myThread.KeyboardCtrl) //((c= getch())!=27)
+        {   
+            // forward and backward walking 
+            // -----------------------------         
+            if(myThread.alpha_velo(0)> 0.0)
+            {
+                if(vx_factor >= 1.0) { vx_factor = 1.0; }
+                else { vx_factor += myThread.alpha_velo(0); }
+                //myThread.StopCtrl = true;
+                //done = true;
+            }
+            else if(myThread.alpha_velo(0)== 0.0)
+            {
+                vx_factor =0.0; 
+            }
+            else
+            {
+                if(vx_factor <= -1.0) {  vx_factor = -1.0;  }
+                else { vx_factor += myThread.alpha_velo(0);  }
+            }
+
+            // lateral walking 
+            // ---------------
+            if(myThread.alpha_velo(1)> 0.0)
+            {
+                if(vy_factor >= 1.0) { vy_factor = 1.0; }
+                else { vy_factor += myThread.alpha_velo(1); }
+            }
+            else if(myThread.alpha_velo(1)== 0.0)
+            {
+                vy_factor = 0.0;
+            }
+            else
+            {
+                if(vy_factor <= -1.0) {  vy_factor = -1.0;  }
+                else { vy_factor += myThread.alpha_velo(1);  }
+            }
+
+            // rotation
+            // --------
+            if(myThread.alpha_velo(2)> 0.0)
+            {
+                if(wz_factor >= 1.0) { wz_factor = 1.0; }
+                else { wz_factor += myThread.alpha_velo(2); }
+            }
+            else if(myThread.alpha_velo(2)== 0.0)
+            {
+                 wz_factor = 0.0;
+            }
+            else
+            {
+                if(wz_factor <= -1.0) {  wz_factor = -1.0;  }
+                else { wz_factor += myThread.alpha_velo(2);  }
+            }
+            
+            // Set the Desired CoM velocity
+            myThread.Des_RelativeVelocity(0) = 0.10 * vx_factor;
+            myThread.Des_RelativeVelocity(1) = 0.10 * vy_factor;
+            myThread.Des_RelativeVelocity(2) = 0.20 * wz_factor;
+        }
+        else
+        {
+            // Set the Desired CoM velocity
+            // myThread.Des_RelativeVelocity(0) = 0.06 * vx_factor;
+            // myThread.Des_RelativeVelocity(1) = 0.06 * vy_factor;
+            // myThread.Des_RelativeVelocity(2) = 0.08 * wz_factor;
+            vx_factor = 0.0;
+            vy_factor = 0.0;
+            wz_factor = 0.0;
+        }
 
       
-            if (!done &&((Time::now()-startTime)> RunDuration))
-            {
+        if (!done &&((Time::now()-startTime)> RunDuration))
+        {
 
-                done=true;
+            done=true;
 
-                FinalMoveTime = Time::now();
+            FinalMoveTime = Time::now();
 
-                n_Samp_init = 2*(n_Samp1 - 1) - myThread.CpBalWlkController->SMx->IndexSFt; // 2*
+            n_Samp_init = 2*(n_Samp1 - 1) - myThread.CpBalWlkController->SMx->IndexSFt; // 2*
 
-                myThread.Des_RelativeVelocity(0) = 0.00;
-                myThread.Des_RelativeVelocity(1) = 0.00;
-                myThread.Des_RelativeVelocity(2) = 0.00;
+            myThread.Des_RelativeVelocity(0) = 0.00;
+            myThread.Des_RelativeVelocity(1) = 0.00;
+            myThread.Des_RelativeVelocity(2) = 0.00;
 
-                cout << " SamplingTime : "<< myThread.Parameters->SamplingTime << endl;
-                cout << " Alignment bool : "<< (done) << endl;
+            cout << " SamplingTime : "<< myThread.Parameters->SamplingTime << endl;
+            cout << " Alignment bool : "<< (done) << endl;
 
-                //finalConf = true;
-            }
+            //finalConf = true;
+        }
 
-            if (done)
-            {
-                myThread.Des_RelativeVelocity(0) = 0.00;
-                myThread.Des_RelativeVelocity(1) = 0.00;
-                myThread.Des_RelativeVelocity(2) = 0.00;
-            }
+        if (done)
+        {
+            myThread.Des_RelativeVelocity(0) = 0.00;
+            myThread.Des_RelativeVelocity(1) = 0.00;
+            myThread.Des_RelativeVelocity(2) = 0.00;
+        }
 
-            //cout << " Stopping time :\n"<< (n_Samp_init *myThread.Parameters->SamplingTime) << endl;
+        if (done && ((Time::now()-FinalMoveTime)>= (n_Samp_init *myThread.Parameters->SamplingTime)))
+        {
+            finalConf = true;
 
-            if (done && ((Time::now()-FinalMoveTime)>= (n_Samp_init *myThread.Parameters->SamplingTime)))
-            {
-                finalConf = true;
-
-                cout << " Feet Alignment done, Now closing " << endl;
-            }
+            cout << " Feet Alignment done, Now closing " << endl;
+        }
 
 
     }
@@ -287,9 +370,6 @@ int main(int argc, char **argv) //(int argc, char *argv[])
     myThread.Des_RelativeVelocity(0) = 0.00;  // TO DO
     myThread.Des_RelativeVelocity(1) = 0.00;
     myThread.Des_RelativeVelocity(2) = 0.00;
-
-    // Bring the feet at the initial configuration
-    // int n_Samp1, n_Samp_init;
     
     myThread.stop();
 

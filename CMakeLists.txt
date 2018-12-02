@@ -1,4 +1,4 @@
-project(WalkingGrasping)
+project(BipedWalkingGrasping)
 cmake_minimum_required(VERSION 2.8)
 
 find_package(YARP)
@@ -7,18 +7,19 @@ find_package(Eigen3 REQUIRED)
 find_package(wholeBodyInterface REQUIRED)
 find_package(yarpWholeBodyInterface 0.2.2 REQUIRED)
 find_package(iDynTree REQUIRED)
-
 find_package(Curses REQUIRED)
 
-find_library(libqpOASES NAMES libqpOASES.so PATHS "~/icub/software/src/robotology-superbuild/build/install/lib/")
+find_library(libqpOASES NAMES libqpOASES.so PATHS "/home/icub/workspace/icubSources/codyco-superbuild/build/install/lib/")
 
 list(APPEND CMAKE_MODULE_PATH "/usr/local/include/eigen3")
 
 set(SRC_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(HEADERS_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
+set(KEYBOARD_SRC ${CMAKE_CURRENT_SOURCE_DIR}/KeyboardCommandsReader/KeyboardCommandsReader.cpp)
+
 set(EIGEN_INCLUDE_DIR "/usr/include/eigen3")
-set(qpOASES_DIR "~/icub/software/src/robotology-superbuild/build/external/qpOASES")
+set(qpOASES_DIR "/home/icub/workspace/icubSources/codyco-superbuild/external/qpOASES")
 
 include_directories(${qpOASES_DIR}/include)
 
@@ -72,6 +73,10 @@ SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ICUB_LINK_FLAGS}")
 
 add_definitions(-D_USE_MATH_DEFINES)
 
+# Executable for the walking controller
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
-
 target_link_libraries(${PROJECT_NAME} ${libqpOASES} iKin ${YARP_LIBRARIES} ${yarpWholeBodyInterface_LIBRARIES} ${CURSES_LIBRARIES})
+
+# Executable for the keyboard reader
+add_executable(KeyboardCommandsReader ${KEYBOARD_SRC})
+target_link_libraries(KeyboardCommandsReader ${YARP_LIBRARIES} ${CURSES_LIBRARIES})

@@ -170,6 +170,15 @@ public:
     bool left_stance;
     bool writeCommands;
 
+    // activate keyboard control
+    // ------------------------------
+    bool KeyboardCtrl;
+    bool iskeypportActive;
+    // Creating port for keyboard input cmd
+    Bottle *keyboardValues;
+    BufferedPort<Bottle> KeyboardCmd_port_In;
+    VectorXd alpha_velo;  // factor of velocity increase
+
     firstOrderIntegrator *FilterStatesX;
     firstOrderIntegrator *FilterStatesY;
     firstOrderIntegrator *FilterStatesR;
@@ -275,13 +284,9 @@ public:
 
     // variable to pause the walking
     bool PauseWalking;
-
     
 
-
-
-
-    CpBalWlkCtrlThread(int period, std::string _moduleName, std::string _robotName, int FeedbackType, wbi::wholeBodyInterface& robot);
+    CpBalWlkCtrlThread(int period, std::string _moduleName, std::string _robotName, int FeedbackType, bool ActiveKeyBoardCtrl_, wbi::wholeBodyInterface& robot);
     ~CpBalWlkCtrlThread();
 
     bool threadInit();
