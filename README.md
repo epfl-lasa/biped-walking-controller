@@ -60,7 +60,7 @@ Once the CMakeList.txt edited, the controller can be built. Just run
 
 ```bash
 $ cd ~/controller_dir
-$ mkdir built && cd built
+$ mkdir build && cd build
 $ cmake .. && make
 ```
 ---
