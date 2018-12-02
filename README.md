@@ -62,7 +62,7 @@ $ cd ~/biped-walking-controller
 $ mkdir built && cd built
 $ cmake .. && make
 ```
-This will create the ``./WalkingGrasping`` executable which runs the controller. It will be found in ``~/biped-walking-controller/build``.
+This will create the ``./WalkingGrasping`` executable which runs the controller. It will be placed in ``~/biped-walking-controller/build``.
 
 ---
 
