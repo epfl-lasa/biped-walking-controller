@@ -47,7 +47,6 @@ For simulation
 Clone the repository
 
 ```bash
-$ cd ~/controller_dir
 $ git clone https://github.com/epfl-lasa/biped-walking-controller.git
 ```
 
@@ -59,10 +58,12 @@ Edit first the `CMakeLists.txt` file to indicate :
 Once the CMakeList.txt edited, the controller can be built. Just run
 
 ```bash
-$ cd ~/controller_dir
+$ cd ~/biped-walking-controller
 $ mkdir build && cd build
 $ cmake .. && make
 ```
+This will create the ``./WalkingGrasping`` executable which runs the controller. It will be placed in ``~/biped-walking-controller/build``.
+
 ---
 
 ## Running the controller
