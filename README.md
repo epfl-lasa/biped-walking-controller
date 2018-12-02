@@ -63,8 +63,8 @@ $ mkdir build && cd build
 $ cmake .. && make
 ```
 This will create two executables which will placed in ``~/biped-walking-controller/build``.
-- ``./BipedWalkingGrasping``: executable which runs the walking controller
-- ``./KeyBoardCommandReader``: executable which runs a keyboard-command-reader in which the user can set the desired velocity with keyboard commands.
+- ``./BipedWalkingGrasping``: executable that runs the walking controller
+- ``./KeyBoardCommandReader``: executable that runs a keyboard-command-reader in which the user can set the desired velocity with keyboard commands.
 
 ---
 
