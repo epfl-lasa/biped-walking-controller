@@ -47,7 +47,6 @@ For simulation
 Clone the repository
 
 ```bash
-$ cd ~/controller_dir
 $ git clone https://github.com/epfl-lasa/biped-walking-controller.git
 ```
 
@@ -59,34 +58,41 @@ Edit first the `CMakeLists.txt` file to indicate :
 Once the CMakeList.txt edited, the controller can be built. Just run
 
 ```bash
-$ cd ~/controller_dir
-$ mkdir built && cd built
+$ cd ~/biped-walking-controller
+$ mkdir build && cd build
 $ cmake .. && make
 ```
+This will create two executables which will placed in ``~/biped-walking-controller/build``.
+- ``./BipedWalkingGrasping``: executable that runs the walking controller
+- ``./KeyBoardCommandReader``: executable that runs a keyboard-command-reader in which the user can set the desired velocity with keyboard commands.
+
 ---
 
 ## Running the controller
 Running this controller in its current version is still quite elaborate. 
 
 - start yarpserver, in one terminal type the following
-```
+```bash
 $ yarpserver
 ```
-- (simulation) start gazebo simulator and import include the robot model (`iCub (no hands)`)
-```
+- In another terminal (simulation) start gazebo simulator and import include the robot model (`iCub (no hands)`)
+```bash
 $ cd ~/robotology-superbuild/robotology
 $ gazebo ./icub-gazebo/worlds/icub.world
 ```
-
-- Bring the robot in home position 
-```
+- In a third terminal, bring the robot in home position 
+```bash
 $ yarpmotorgui --from homePoseBalancing.ini --robot robot_name 
 ```
 robot_name: (e.g. icub or icubSim) and then press the 'Home All' button
 
-- Launch the controller as follows : 
-```
+- In one terminal launch the walking controller as follows : 
+```bash
 $ ./WalkingGrasping --from ../config/BalanceWalkingController.ini
+```
+- In another terminal launch the keyboard command reader as follows : 
+```bash
+$ ./KeyboardCommandsReader --from ../config/BalanceWalkingController.ini
 ```
 
 #### Known Run-time Issues (and solutions)
@@ -97,7 +103,6 @@ $ ./WalkingGrasping --from ../config/BalanceWalkingController.ini
 ## Expected behavior
 
 The behavior of the controller is  demonstrated [here](https://www.youtube.com/watch?v=9hKOVHDDnfc&t=16s)
-
 
 ---
 
