@@ -86,13 +86,13 @@ $ yarpmotorgui --from homePoseBalancing.ini --robot robot_name
 ```
 robot_name: (e.g. icub or icubSim) and then press the 'Home All' button
 
-- In one terminal launch the walking controller as follows : 
-```bash
-$ ./WalkingGrasping --from ../config/BalanceWalkingController.ini
-```
-- In another terminal launch the keyboard command reader as follows : 
+- In one terminal launch the keyboard command reader as follows : 
 ```bash
 $ ./KeyboardCommandsReader --from ../config/BalanceWalkingController.ini
+```
+- In another terminal launch the walking controller as follows : 
+```bash
+$ ./WalkingGrasping --from ../config/BalanceWalkingController.ini
 ```
 
 #### Known Run-time Issues (and solutions)
