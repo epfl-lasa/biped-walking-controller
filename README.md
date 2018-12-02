@@ -58,10 +58,12 @@ Edit first the `CMakeLists.txt` file to indicate :
 Once the CMakeList.txt edited, the controller can be built. Just run
 
 ```bash
-$ cd ~/controller_dir
+$ cd ~/biped-walking-controller
 $ mkdir built && cd built
 $ cmake .. && make
 ```
+This will create the ``./WalkingGrasping`` executable which runs the controller. It will be found in ``~/biped-walking-controller/build``.
+
 ---
 
 ## Running the controller
