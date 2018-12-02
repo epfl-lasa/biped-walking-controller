@@ -27,7 +27,7 @@ For simulation
 - [gazebo_yarp_plugins](https://github.com/robotology/gazebo-yarp-plugins)
 - [icub-gazebo](https://github.com/robotology/icub-gazebo)
 
-**Easier option (on clean installation):**
+**Easiest option (on clean installation):**
 1. Install latest version of Eigen3 as above.
 2. Install Gazebo7 and libgazebo7: [installation instructions](http://gazebosim.org/tutorials?cat=install&tut=install_ubuntu&ver=7.0) 
 3. Install all yarp/iCub/gazebo-plugin libraries with [robotology-superbuild](https://github.com/robotology/robotology-superbuild)
