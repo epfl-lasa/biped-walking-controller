@@ -87,12 +87,12 @@ robot_name: (e.g. icub or icubSim) and then press the 'Home All' button
 ```
 $ ./WalkingGrasping --from ../config/BalanceWalkingController.ini
 ```
+This code will run the controller with a constant velocity (defined in the config file below) for a predetermined duration (in seconds, also defined in the config file).
 
 #### Known Run-time Issues (and solutions)
 - If you get the error `did not find model.urdf` you must replace, `model.urdf` in the `BalanceWalkingController.ini` config file with `~/robotology-superbuild/build/install/share/codyco/robots/icubGazeboSim/model.urdf`
 
 ---
-
 
 ## Expected behavior
 
