@@ -46,7 +46,6 @@ For simulation
 Clone the repository
 
 ```bash
-$ cd ~/controller_dir
 $ git clone https://github.com/epfl-lasa/biped-walking-controller.git
 ```
 
