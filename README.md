@@ -27,7 +27,7 @@ For simulation
 - [gazebo_yarp_plugins](https://github.com/robotology/gazebo-yarp-plugins)
 - [icub-gazebo](https://github.com/robotology/icub-gazebo)
 
-**Easier option (on clean installation):**
+**Easiest option (on clean installation):**
 1. Install latest version of Eigen3 as above.
 2. Install Gazebo7 and libgazebo7: [installation instructions](http://gazebosim.org/tutorials?cat=install&tut=install_ubuntu&ver=7.0) 
 3. Install all yarp/iCub/gazebo-plugin libraries with [robotology-superbuild](https://github.com/robotology/robotology-superbuild)
@@ -46,7 +46,6 @@ For simulation
 Clone the repository
 
 ```bash
-$ cd ~/controller_dir
 $ git clone https://github.com/epfl-lasa/biped-walking-controller.git
 ```
 
@@ -58,10 +57,12 @@ Edit first the `CMakeLists.txt` file to indicate :
 Once the CMakeList.txt edited, the controller can be built. Just run
 
 ```bash
-$ cd ~/controller_dir
-$ mkdir built && cd built
+$ cd ~/biped-walking-controller
+$ mkdir build && cd build
 $ cmake .. && make
 ```
+This will create the ``./WalkingGrasping`` executable which runs the controller. It will be placed in ``~/biped-walking-controller/build``.
+
 ---
 
 ## Running the controller
