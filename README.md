@@ -87,6 +87,9 @@ robot_name: (e.g. icub or icubSim) and then press the 'Home All' button
 $ ./WalkingGrasping --from ../config/BalanceWalkingController.ini
 ```
 
+#### Known Run-time Issues (and solutions)
+- If you can the error `did not find model.urdf` you must replace, `model.urdf` in the `BalanceWalkingController.ini` config file with `~/robotology-superbuild/build/install/share/codyco/robots/icubGazeboSim/model.urdf`
+
 ---
 
 
