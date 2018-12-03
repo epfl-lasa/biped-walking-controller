@@ -110,29 +110,30 @@ bool CpBalWlkCtrlThread::threadInit()
 
     // keyboard control
     // KeyboardCtrl  = false;
-    iskeypportActive = false;
+    // iskeypportActive = false;
 
-    //Opening the port for the Keyboard input cmds  moduleName
-    std::string KeyboardOutputs_port ="/";
-                KeyboardOutputs_port += moduleName;
-                KeyboardOutputs_port += "/keyboardOutputs:o";
+    // // Opening the port for the Keyboard input cmds  moduleName
+    // std::string KeyboardOutputs_port ="/";
+    //             KeyboardOutputs_port += moduleName;
+    //             KeyboardOutputs_port += "/keyboardOutputs:o";
 
-    if(KeyboardCtrl && !iskeypportActive)
-    {
-        KeyboardCmd_port_In.open("/KeyboardInputCmds:i");
+    // if(KeyboardCtrl && !iskeypportActive)
+    // {
+    //     KeyboardCmd_port_In.open("/KeyboardInputCmds:i");
 
-        if(!Network::connect(KeyboardOutputs_port.c_str(), KeyboardCmd_port_In.getName().c_str()))
-        {
-            printf(" Unable to connect to the KeyboardCmdsReaderModule port");
-            return false;
-        }
-        // Reading of measurement
-        keyboardValues  = KeyboardCmd_port_In.read(); 
-        alpha_velo.resize(keyboardValues->size());
-        alpha_velo.setZero();
-        iskeypportActive = true;
-    }
-
+    //     if(!Network::connect(KeyboardOutputs_port.c_str(), KeyboardCmd_port_In.getName().c_str()))
+    //     {
+    //         printf(" Unable to connect to the KeyboardCmdsReaderModule port");
+    //         return false;
+    //     }
+    //     // Reading of measurement
+    //     keyboardValues  = KeyboardCmd_port_In.read(); 
+    //     // alpha_velo.resize(keyboardValues->size());
+    //     // alpha_velo.setZero();
+    //     iskeypportActive = true;
+    // }    
+    // alpha_velo.resize(3);
+    // alpha_velo.setZero();
 
     // correction of joints_offset betwen the simulator and the actual robot
     joints_Offset.resize(RobotDevices->lljoints, 0.0);
@@ -271,30 +272,6 @@ bool CpBalWlkCtrlThread::threadInit()
                                                                     RobotKin->jts_velocity_lleg, 
                                                                     RobotKin->jts_velocity_rleg,
                                                                     StanceLeg);
-
-    // // left hand joint velocities for the grasping task  wrt. the world frame 
-    // Graspingtask.InitializeQPsolver_lh_GraspWorld2( HTrsf_root_2_World, 
-    //                                                 Graspingtask.HTrsf_CurLh_2_DesLh, 
-    //                                                 RobotKin->Left_Arm_Chain, 
-    //                                                 RobotKin->LeftLegChain,
-    //                                                 RobotKin->RightLegChain, 
-    //                                                 RobotKin->jts_velocity_lleg, 
-    //                                                 RobotKin->jts_velocity_rleg, 
-    //                                                 StanceLeg,
-    //                                                 Parameters->SamplingTime,
-    //                                                 Graspingtask.velocity_Saturation_Limit); 
-
-    // // right hand joint velocities for the grasping task  wrt. the world frame 
-    // Graspingtask.InitializeQPsolver_rh_GraspWorld2( HTrsf_root_2_World, 
-    //                                                 Graspingtask.HTrsf_CurRh_2_DesRh, 
-    //                                                 RobotKin->Right_Arm_Chain, 
-    //                                                 RobotKin->LeftLegChain, 
-    //                                                 RobotKin->RightLegChain, 
-    //                                                 RobotKin->jts_velocity_lleg, 
-    //                                                 RobotKin->jts_velocity_rleg,
-    //                                                 StanceLeg,
-    //                                                 Parameters->SamplingTime,
-    //                                                 Graspingtask.velocity_Saturation_Limit);
 
     // *******************************************************************************************
     // State to input compensation
@@ -511,10 +488,10 @@ void CpBalWlkCtrlThread::threadRelease()
     DataLogger.Close_files();
 
     // closing the keyboard reader
-    if(KeyboardCtrl)
-    {
-        KeyboardCmd_port_In.close();
-    }
+    // if(KeyboardCtrl)
+    // {
+    //     KeyboardCmd_port_In.close();
+    // }
     
 
     // release the CpWalkingController
@@ -612,8 +589,6 @@ void CpBalWlkCtrlThread::run()
 
     // -------------------------------------------------------------------
     double t_run = Time::now();
-
-    // printf("Keyboard Velocity vx:%4.6f vy:%4.6f  wz:%4.6f \n", alpha_velo(0) , alpha_velo(1), alpha_velo(2));
     printf("Desired Relative Velocity vx:%4.6f vy:%4.6f  wz:%4.6f \n", Des_RelativeVelocity(0), Des_RelativeVelocity(1), Des_RelativeVelocity(2));
 
     CpBalWlkController->UpdateCpBalWlkController(Parameters, Des_RelativeVelocity+Feedback_RelativeVelocity, CycleCounter);
@@ -852,17 +827,17 @@ void CpBalWlkCtrlThread::run()
     Test_Data(1) = t_IK_f-t_IK_0; 
 
     // **************************************
-    // reading the keyboard inputs
-    if(KeyboardCtrl)
-    {
-        keyboardValues  = KeyboardCmd_port_In.read(); 
+    // Reading the keyboard inputs and placing in alpha_velo vector
+    // if(KeyboardCtrl)
+    // {
+    //     keyboardValues  = KeyboardCmd_port_In.read(); 
 
-        // Extract the read value
-        alpha_velo(0) = keyboardValues->get(0).asDouble();
-        alpha_velo(1) = keyboardValues->get(1).asDouble();
-        alpha_velo(2) = keyboardValues->get(2).asDouble();
+    //     // Extract the read value
+    //     alpha_velo(0) = keyboardValues->get(0).asDouble();
+    //     alpha_velo(1) = keyboardValues->get(1).asDouble();
+    //     alpha_velo(2) = keyboardValues->get(2).asDouble();
 
-    }
+    // }
 
     DataLogger.Write_Data(Parameters->SamplingTime,
                          CycleCounter,

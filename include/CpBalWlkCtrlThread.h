@@ -174,10 +174,11 @@ public:
     // ------------------------------
     bool KeyboardCtrl;
     bool iskeypportActive;
+    
     // Creating port for keyboard input cmd
-    Bottle *keyboardValues;
-    BufferedPort<Bottle> KeyboardCmd_port_In;
-    VectorXd alpha_velo;  // factor of velocity increase
+    // Bottle *keyboardValues;
+    // BufferedPort<Bottle> KeyboardCmd_port_In;
+    // VectorXd alpha_velo;  // factor of velocity increase
 
     firstOrderIntegrator *FilterStatesX;
     firstOrderIntegrator *FilterStatesY;

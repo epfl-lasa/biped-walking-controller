@@ -61,7 +61,6 @@ using namespace Eigen;
 
 
 
-
 int main(int argc, char **argv) //(int argc, char *argv[])
 {
     
@@ -75,11 +74,9 @@ int main(int argc, char **argv) //(int argc, char *argv[])
     }
     // ====================================================================================
     // creation of a ressource finder object
-    yarp::os::ResourceFinder rf; // = yarp::os::ResourceFinder::getResourceFinderSingleton();
-    
+    yarp::os::ResourceFinder rf; // = yarp::os::ResourceFinder::getResourceFinderSingleton();    
     rf.setVerbose(true);                                        //logs searched directories
-    rf.setDefaultConfigFile("BalanceWalkingController.ini");        //default config file name.
-    //rf.setDefaultContext("wholeBodyHPIDControl");             //when no parameters are given to the module this is the default context
+    rf.setDefaultConfigFile("BalanceWalkingController.ini");    //default config file name.
     rf.configure(argc, argv);
     
     if (rf.check("help")) 
@@ -90,7 +87,6 @@ int main(int argc, char **argv) //(int argc, char *argv[])
         std::cout<< "\t--robot            :Robot name (icubSim or icub). Set to icub by default." << std::endl;
         std::cout<< "\t--moduleName       :name of the module ." << std::endl;
         std::cout<< "\t--local            :Prefix of the ports opened by the module. Set to the module name by default, i.e. wholeBodyHPIDControl." << std::endl;
-//        codyco::iCubPartVersionOptionsPrint();
         return 0;
     }
 
@@ -138,8 +134,6 @@ int main(int argc, char **argv) //(int argc, char *argv[])
         return -1;
     }
 
-    //int actuatedDOFs = robotMainJoints.size();
-
     //Load configuration-time parameters
     std::string m_moduleName = rf.check("name", Value("CpBalanceWalkingController"), "Looking for module name").asString();
     std::string m_robotName = rf.check("robot", Value("icubGazeboSim"), "Looking for robot name").asString();
@@ -184,23 +178,19 @@ int main(int argc, char **argv) //(int argc, char *argv[])
         ActiveKeyBoardCtrl = false;
     }  
 
-    // instantiate the 
-    CpBalWlkCtrlThread myThread(period, m_moduleName, m_robotName, FT_feedbackType, ActiveKeyBoardCtrl, *robot); //period is 40ms
+    // Instantiate the Control Thread
+    CpBalWlkCtrlThread myCtrlThread(period, m_moduleName, m_robotName, FT_feedbackType, ActiveKeyBoardCtrl, *robot); //period is 40ms
 
     // Starting the BalanceWalkingController Thread
-    myThread.start();
+    myCtrlThread.start();
 
      // variables for end of walking configuration
     int n_Samp1, n_Samp_init;
-        n_Samp1 = (int)(round(myThread.Parameters->DurationSteps[0]/myThread.Parameters->SamplingTime));
+        n_Samp1 = (int)(round(myCtrlThread.Parameters->DurationSteps[0]/myCtrlThread.Parameters->SamplingTime));
 
 
     // Set the Initial Desired CoM velocity
-    myThread.Des_RelativeVelocity = InitVelocity;
-
-
-    //bool ft_sensing = false;
-
+    myCtrlThread.Des_RelativeVelocity = InitVelocity;
     bool done=false;
     bool finalConf = false;
     double startTime=Time::now();
@@ -216,76 +206,75 @@ int main(int argc, char **argv) //(int argc, char *argv[])
 
     // =================================
 
-    while(!(done && finalConf) && !myThread.StopCtrl)
+    while(!(done && finalConf) && !myCtrlThread.StopCtrl)
     {
 
-        if(myThread.KeyboardCtrl) //((c= getch())!=27)
+        if(myCtrlThread.KeyboardCtrl) //((c= getch())!=27)
         {   
 
             // forward and backward walking 
             // -----------------------------         
-            if(myThread.alpha_velo(0)> 0.0)
+            if(myCtrlThread.alpha_velo(0)> 0.0)
             {
                 if(vx_factor >= 1.0) { vx_factor = 1.0; }
-                else { vx_factor += myThread.alpha_velo(0); }
-                //myThread.StopCtrl = true;
+                else { vx_factor += myCtrlThread.alpha_velo(0)*0.0001; }
+                //myCtrlThread.StopCtrl = true;
                 //done = true;
             }
-            else if(myThread.alpha_velo(0)== 0.0)
+            else if(myCtrlThread.alpha_velo(0)== 0.0)
             {
                 vx_factor =0.0; 
             }
             else
             {
                 if(vx_factor <= -1.0) {  vx_factor = -1.0;  }
-                else { vx_factor += myThread.alpha_velo(0);  }
+                else { vx_factor += myCtrlThread.alpha_velo(0)*0.0001;  }
             }
 
             // lateral walking 
             // ---------------
-            if(myThread.alpha_velo(1)> 0.0)
+            if(myCtrlThread.alpha_velo(1)> 0.0)
             {
                 if(vy_factor >= 1.0) { vy_factor = 1.0; }
-                else { vy_factor += myThread.alpha_velo(1); }
+                else { vy_factor += myCtrlThread.alpha_velo(1)*0.0001; }
             }
-            else if(myThread.alpha_velo(1)== 0.0)
+            else if(myCtrlThread.alpha_velo(1)== 0.0)
             {
                 vy_factor = 0.0;
             }
             else
             {
                 if(vy_factor <= -1.0) {  vy_factor = -1.0;  }
-                else { vy_factor += myThread.alpha_velo(1);  }
+                else { vy_factor += myCtrlThread.alpha_velo(1)*0.0001;  }
             }
 
             // rotation
             // --------
-            if(myThread.alpha_velo(2)> 0.0)
+            if(myCtrlThread.alpha_velo(2)> 0.0)
             {
                 if(wz_factor >= 1.0) { wz_factor = 1.0; }
-                else { wz_factor += myThread.alpha_velo(2)*0.0001; }
+                else { wz_factor += myCtrlThread.alpha_velo(2)*0.0001; }
             }
-            else if(myThread.alpha_velo(2)== 0.0)
+            else if(myCtrlThread.alpha_velo(2)== 0.0)
             {
                  wz_factor = 0.0;
             }
             else
             {
                 if(wz_factor <= -1.0) {  wz_factor = -1.0;  }
-                else { wz_factor += myThread.alpha_velo(2);  }
+                else { wz_factor += myCtrlThread.alpha_velo(2)*0.0001;  }
             }
             
             // Set the Desired CoM velocity
-            myThread.Des_RelativeVelocity(0) = 0.10 * vx_factor;
-            myThread.Des_RelativeVelocity(1) = 0.10 * vy_factor;
-            myThread.Des_RelativeVelocity(2) = 0.20 * wz_factor;
+            myCtrlThread.Des_RelativeVelocity(0) = 0.10 * vx_factor;
+            myCtrlThread.Des_RelativeVelocity(1) = 0.10 * vy_factor;
+            myCtrlThread.Des_RelativeVelocity(2) = 0.20 * wz_factor;
 
 
             // Send fixed desired COM velocity to controller
-            // myThread.Des_RelativeVelocity(0) = 0.05;
-            // myThread.Des_RelativeVelocity(1) = 0.0;
-            // myThread.Des_RelativeVelocity(2) = 0.0;
-
+            // myCtrlThread.Des_RelativeVelocity(0) = 0.025;
+            // myCtrlThread.Des_RelativeVelocity(1) = 0.0;
+            // myCtrlThread.Des_RelativeVelocity(2) = 0.0;
 
         }
         else
@@ -304,26 +293,25 @@ int main(int argc, char **argv) //(int argc, char *argv[])
 
             FinalMoveTime = Time::now();
 
-            n_Samp_init = 2*(n_Samp1 - 1) - myThread.CpBalWlkController->SMx->IndexSFt; // 2*
+            n_Samp_init = 2*(n_Samp1 - 1) - myCtrlThread.CpBalWlkController->SMx->IndexSFt; // 2*
 
-            myThread.Des_RelativeVelocity(0) = 0.00;
-            myThread.Des_RelativeVelocity(1) = 0.00;
-            myThread.Des_RelativeVelocity(2) = 0.00;
+            myCtrlThread.Des_RelativeVelocity(0) = 0.00;
+            myCtrlThread.Des_RelativeVelocity(1) = 0.00;
+            myCtrlThread.Des_RelativeVelocity(2) = 0.00;
 
-            cout << " SamplingTime : "<< myThread.Parameters->SamplingTime << endl;
+            cout << " SamplingTime : "<< myCtrlThread.Parameters->SamplingTime << endl;
             cout << " Alignment bool : "<< (done) << endl;
-
             //finalConf = true;
         }
 
         if (done)
         {
-            myThread.Des_RelativeVelocity(0) = 0.00;
-            myThread.Des_RelativeVelocity(1) = 0.00;
-            myThread.Des_RelativeVelocity(2) = 0.00;
+            myCtrlThread.Des_RelativeVelocity(0) = 0.00;
+            myCtrlThread.Des_RelativeVelocity(1) = 0.00;
+            myCtrlThread.Des_RelativeVelocity(2) = 0.00;
         }
 
-        if (done && ((Time::now()-FinalMoveTime)>= (n_Samp_init *myThread.Parameters->SamplingTime)))
+        if (done && ((Time::now()-FinalMoveTime)>= (n_Samp_init *myCtrlThread.Parameters->SamplingTime)))
         {
             finalConf = true;
 
@@ -332,13 +320,15 @@ int main(int argc, char **argv) //(int argc, char *argv[])
 
     }
 
-
     // Set to Zero the Desired CoM velocity before stoping
-    myThread.Des_RelativeVelocity(0) = 0.00;  // TO DO
-    myThread.Des_RelativeVelocity(1) = 0.00;
-    myThread.Des_RelativeVelocity(2) = 0.00;
+    myCtrlThread.Des_RelativeVelocity(0) = 0.00;  // TO DO
+    myCtrlThread.Des_RelativeVelocity(1) = 0.00;
+    myCtrlThread.Des_RelativeVelocity(2) = 0.00;
     
-    myThread.stop();
+    myCtrlThread.stop();
+
+    // Close keyboard thread
+    KeyboardCmd_port_In.close();
 
     // close the wholebodyInterface object (robot)
     if (robot) 

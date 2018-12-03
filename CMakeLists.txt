@@ -12,10 +12,8 @@ find_package(Curses REQUIRED)
 find_library(libqpOASES NAMES libqpOASES.a PATHS "/usr/local/lib/")
 list(APPEND CMAKE_MODULE_PATH "/usr/local/include/eigen3")
 
-set(SRC_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/src")
+set(SRC_FOLDER      "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(HEADERS_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/include")
-
-set(KEYBOARD_SRC ${CMAKE_CURRENT_SOURCE_DIR}/KeyboardCommandsReader/KeyboardCommandsReader.cpp)
 
 set(EIGEN_INCLUDE_DIR "/usr/include/eigen3")
 set(qpOASES_DIR "/home/nbfigueroa/yarp_ws/qpOASES-3.2.1")
@@ -43,6 +41,7 @@ set(HEADERS    ${HEADERS_FOLDER}/InitBalWlkParameters.h
                ${HEADERS_FOLDER}/ArmsForceTorqueSensorsChains.h
                ${HEADERS_FOLDER}/QPOasesSolver.hpp)
 
+
 set(SOURCES    ${SRC_FOLDER}/InitBalWlkParameters.cpp
                ${SRC_FOLDER}/CommunicationControl.cpp
                ${SRC_FOLDER}/RobotModel.cpp
@@ -53,14 +52,11 @@ set(SOURCES    ${SRC_FOLDER}/InitBalWlkParameters.cpp
                ${SRC_FOLDER}/Data_logging.cpp            
                ${SRC_FOLDER}/ReferencesCompensator.cpp
                ${SRC_FOLDER}/Grasping.cpp
-               ${SRC_FOLDER}/CpBalWlkCtrlThread.cpp
-               main.cpp)
+               ${SRC_FOLDER}/CpBalWlkCtrlThread.cpp               
+               main_walker.cpp)
 
 source_group("Source Files" FILES ${SOURCES})
 source_group("Header Files" FILES ${HEADERS})
-
-#include_directories (${EIGEN_INCLUDE_DIR})
-#include_directories (${qpOASES_INCLUDE_DIR})
 
 include_directories(${EIGEN3_INCLUDE_DIR}
                     ${wholeBodyInterface_INCLUDE_DIRS}
@@ -69,7 +65,6 @@ include_directories(${EIGEN3_INCLUDE_DIR}
                     ${YARP_INCLUDE_DIRS})
 
 include_directories(${CURSES_INCLUDE_DIR})
-
 include_directories(${HEADERS_FOLDER})
 
 SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ICUB_LINK_FLAGS}")
@@ -80,6 +75,16 @@ add_definitions(-D_USE_MATH_DEFINES)
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 target_link_libraries(${PROJECT_NAME} ${libqpOASES} iKin ${YARP_LIBRARIES} ${yarpWholeBodyInterface_LIBRARIES} ${CURSES_LIBRARIES})
 
-# Executable for the keyboard reader
-add_executable(KeyboardCommandsReader ${KEYBOARD_SRC})
-target_link_libraries(KeyboardCommandsReader ${YARP_LIBRARIES} ${CURSES_LIBRARIES})
+
+# Defining variable and creating executables for COM Desired Motion planning
+set(COM_SRC_FOLDER      "${CMAKE_CURRENT_SOURCE_DIR}/com-des-motion/src")
+set(COM_HEADERS_FOLDER  "${CMAKE_CURRENT_SOURCE_DIR}/com-des-motion/include")
+set(COM_KEYBOARD_SRC    main_keyboard.cpp)
+
+set(COM_HEADERS ${COM_HEADERS_FOLDER}/KeyboardReaderSender.h)
+set(COM_SOURCES ${COM_SRC_FOLDER}/KeyboardReaderSender.cpp)
+
+include_directories(${COM_HEADERS_FOLDER})
+
+add_executable(KeyboardReaderSender ${COM_KEYBOARD_SRC} ${COM_SOURCES} ${COM_HEADERS})
+target_link_libraries(KeyboardReaderSender  ${YARP_LIBRARIES} ${CURSES_LIBRARIES})
