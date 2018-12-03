@@ -92,7 +92,7 @@ $ ./KeyboardCommandsReader --from ../config/BalanceWalkingController.ini
 ```
 - In another terminal launch the walking controller as follows : 
 ```bash
-$ ./WalkingGrasping --from ../config/BalanceWalkingController.ini
+$ ./BipedWalkingGrasping --from ../config/BalanceWalkingController.ini
 ```
 
 #### Known Run-time Issues (and solutions)
