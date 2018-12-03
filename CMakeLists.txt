@@ -77,8 +77,8 @@ target_link_libraries(${PROJECT_NAME} ${libqpOASES} iKin ${YARP_LIBRARIES} ${yar
 
 
 # Defining variable and creating executables for COM Desired Motion planning
-set(COM_SRC_FOLDER      "${CMAKE_CURRENT_SOURCE_DIR}/com-des-motion/src")
-set(COM_HEADERS_FOLDER  "${CMAKE_CURRENT_SOURCE_DIR}/com-des-motion/include")
+set(COM_SRC_FOLDER      "${CMAKE_CURRENT_SOURCE_DIR}/com-vel-cmd/src")
+set(COM_HEADERS_FOLDER  "${CMAKE_CURRENT_SOURCE_DIR}/com-vel-cmd/include")
 set(COM_KEYBOARD_SRC    main_keyboard.cpp)
 
 set(COM_HEADERS ${COM_HEADERS_FOLDER}/KeyboardReaderSender.h)
