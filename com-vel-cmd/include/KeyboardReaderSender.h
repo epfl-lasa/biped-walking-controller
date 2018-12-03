@@ -36,12 +36,8 @@ class KeyboardReaderSender : public yarp::os::RateThread
         double wz_factor;
 
         // port to stream the value of the coefficients
-        // Creation of port for the CoM
         BufferedPort<yarp::sig::Vector> VeloFactors_Port;
-        //yarp::sig::Vector& output_veloCoef;
-
-        yarp::sig::Vector VeloFactors;
-        
+        yarp::sig::Vector VeloFactors;        
 
 
         KeyboardReaderSender(int period, std::string KeyboardModule)  : RateThread(period)

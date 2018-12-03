@@ -48,6 +48,7 @@
 #include "OptimalFilters.h"
 
 #include "CpBalWlkCtrlThread.h"
+#include "DesVelocityReader.h"
 
 #include <qpOASES.hpp>
 
@@ -191,117 +192,57 @@ int main(int argc, char **argv) //(int argc, char *argv[])
     bool AlignFeet = false;
     bool noInput   = false;
 
+    // ==========================================================================
+    // Instantiate the Desired CoM Velocity Reader 
+    DesVelocityReader myDesiredCoM( m_moduleName, VelocityCmdType, InitVelocity); 
+    myDesiredCoM.initReader();
+    // ==========================================================================
 
-    // =================================
-    // Creating port for keyboard input cmd
-    Bottle *keyboardValues;
-    BufferedPort<Bottle> KeyboardCmd_port_In;
-    VectorXd incr_vel;   // factor of velocity increase
-    VectorXd des_com_vel;  // factor of velocity increase
-
-    //Opening the port for the Keyboard input cmds  moduleName
-    std::string KeyboardOutputs_port ="/";
-                KeyboardOutputs_port += m_moduleName;
-                KeyboardOutputs_port += "/keyboardOutputs:o";
-
-
-    KeyboardCmd_port_In.open("/KeyboardInputCmds:i");
-
-    if(!Network::connect(KeyboardOutputs_port.c_str(), KeyboardCmd_port_In.getName().c_str()))
-    {
-        printf(" Unable to connect to the KeyboardCmdsReaderModule port");
-        return false;
-    }
-
-    // Reading of measurement
-    keyboardValues  = KeyboardCmd_port_In.read(); 
-    incr_vel.resize(keyboardValues->size());
-    incr_vel.setZero();
-
-    des_com_vel.resize(keyboardValues->size());
+    // Variable for Desired CoM Velocity Given my port
+    Eigen::VectorXd des_com_vel;
+    des_com_vel.resize(3);
     des_com_vel.setZero();
 
-    des_com_vel(0) = InitVelocity(0);
-    des_com_vel(1) = InitVelocity(1);
-    des_com_vel(2) = InitVelocity(2);
-
-    while(!(done && finalConf) && !myCtrlThread.StopCtrl && !isnan(incr_vel(0)))
-    {
-        // Extract the read value
-        keyboardValues  = KeyboardCmd_port_In.read();         
-        incr_vel(0) = keyboardValues->get(0).asDouble();
-        incr_vel(1) = keyboardValues->get(1).asDouble();
-        incr_vel(2) = keyboardValues->get(2).asDouble();
-        printf("Desired Keyboard Command +vx:%4.6f +vy:%4.6f  +wz:%4.6f \n", incr_vel(0), incr_vel(1), incr_vel(2));
-
-        if(VelocityCmdType == 1) 
-        {   
-
-            // Add increments
-            des_com_vel(0) = des_com_vel(0) + incr_vel(0);
-            des_com_vel(1) = des_com_vel(1) + incr_vel(1);
-            des_com_vel(2) = des_com_vel(2) + incr_vel(2);
-
-            // Truncate velocities
-            // forward and backward walking 
-            // -----------------------------         
-            if(des_com_vel(0) >= 0.1 && incr_vel(0) > 0.0) { des_com_vel(0) = 0.1; }
-            if(des_com_vel(0) <= -0.1 && incr_vel(0) < 0.0) {  des_com_vel(0) = -0.1;  }
-
-
-            // lateral walking 
-            // ---------------
-            if(des_com_vel(1) >= 0.1 && incr_vel(1) > 0.0) { des_com_vel(1) = 0.1; }
-            if(des_com_vel(1) <= -0.1 && incr_vel(1) < 0.0) {  des_com_vel(1) = -0.1;  }
-
-            // rotation
-            // --------
-            if(des_com_vel(2) >= 0.15 && incr_vel(2) > 0.0) { des_com_vel(2) = 0.15; }
-            if(des_com_vel(2) <= -0.15 && incr_vel(2) < 0.0) {  des_com_vel(2) = -0.15; }
+    while(!(done && finalConf) && !myCtrlThread.StopCtrl && !isnan(des_com_vel(0))){
         
-        }
-        else if(VelocityCmdType == 0) 
-        {
-            // Fix COM velocity
-            des_com_vel(0) = 0.05;
-            des_com_vel(1) = 0.0;
-            des_com_vel(2) = 0.0;
-        }
-      
+        // des_com_vel(0) = myDesiredCoMThread.des_com_vel_(0);
+        // des_com_vel(1) = myDesiredCoMThread.des_com_vel_(1);
+        // des_com_vel(2) = myDesiredCoMThread.des_com_vel_(2);
+
+        // Read the current desired CoM
+        myDesiredCoM.read();
+
+        // Get current desired velocity command
+        des_com_vel = myDesiredCoM.des_com_vel_;        
+
         printf("Sent Desired Velocity vx:%4.6f vy:%4.6f  wz:%4.6f \n", des_com_vel(0), des_com_vel(1), des_com_vel(2));
+
+        // Send to controller thread 
         myCtrlThread.Des_RelativeVelocity(0) = des_com_vel(0);
         myCtrlThread.Des_RelativeVelocity(1) = des_com_vel(1);
         myCtrlThread.Des_RelativeVelocity(2) = des_com_vel(2);            
 
-        if (!done &&((Time::now()-startTime)> RunDuration))
-        {
+
+        // Stopping conditions
+        if (!done &&((Time::now()-startTime)> RunDuration)){
 
             done=true;
-
             FinalMoveTime = Time::now();
-
             n_Samp_init = 2*(n_Samp1 - 1) - myCtrlThread.CpBalWlkController->SMx->IndexSFt; // 2*
-
             myCtrlThread.Des_RelativeVelocity(0) = 0.00;
             myCtrlThread.Des_RelativeVelocity(1) = 0.00;
             myCtrlThread.Des_RelativeVelocity(2) = 0.00;
-
             cout << " SamplingTime : "<< myCtrlThread.Parameters->SamplingTime << endl;
             cout << " Alignment bool : "<< (done) << endl;
-            //finalConf = true;
         }
 
-        if (done)
-        {
+        if (done){
             myCtrlThread.Des_RelativeVelocity(0) = 0.00;
             myCtrlThread.Des_RelativeVelocity(1) = 0.00;
             myCtrlThread.Des_RelativeVelocity(2) = 0.00;
         }
-
-        if (done && ((Time::now()-FinalMoveTime)>= (n_Samp_init *myCtrlThread.Parameters->SamplingTime)))
-        {
+        if (done && ((Time::now()-FinalMoveTime)>= (n_Samp_init *myCtrlThread.Parameters->SamplingTime))){
             finalConf = true;
-
             cout << " Feet Alignment done, Now closing " << endl;
         }    
 
@@ -311,20 +252,19 @@ int main(int argc, char **argv) //(int argc, char *argv[])
     myCtrlThread.Des_RelativeVelocity(0) = 0.00;  // TO DO
     myCtrlThread.Des_RelativeVelocity(1) = 0.00;
     myCtrlThread.Des_RelativeVelocity(2) = 0.00;
-    
+
+    // Close control thread    
     myCtrlThread.stop();
 
-    // Close keyboard thread
-    KeyboardCmd_port_In.close();
+    // Close Desired CoM velocity reader
+    myDesiredCoM.stop();
 
     // close the wholebodyInterface object (robot)
-    if (robot) 
-    {
+    if (robot) {
         robot->close();
         delete robot;
         robot = 0;
     }
-
 
     return 0;
 }

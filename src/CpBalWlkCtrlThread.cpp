@@ -160,6 +160,7 @@ bool CpBalWlkCtrlThread::threadInit()
     // Estimation of the CoM pose
     robot_model.getEstimates(wbi::ESTIMATE_BASE_POS, m_world2BaseFrameSerialization.data());
     wbi::frameFromSerialization(m_world2BaseFrameSerialization.data(), m_world2BaseFrame);
+
     // Estimation og the CoM pose
     robot_model.forwardKinematics(jts_position.data(), m_world2BaseFrame, wbi::iWholeBodyModel::COM_LINK_ID, CoM_Pose.data());
     CoM_measurements = CoM_Pose.segment(0, 3);
@@ -589,7 +590,8 @@ void CpBalWlkCtrlThread::run()
 
     // -------------------------------------------------------------------
     double t_run = Time::now();
-    printf("Desired Relative Velocity vx:%4.6f vy:%4.6f  wz:%4.6f \n", Des_RelativeVelocity(0), Des_RelativeVelocity(1), Des_RelativeVelocity(2));
+    printf("Desired Relative Velocity  vx:%4.6f vy:%4.6f  wz:%4.6f \n", Des_RelativeVelocity(0), Des_RelativeVelocity(1), Des_RelativeVelocity(2));
+    printf("Current Robot COM Position x:%4.6f y:%4.6f  z:%4.6f \n", CoM_measurements(0), CoM_measurements(1), CoM_measurements(2));
 
     CpBalWlkController->UpdateCpBalWlkController(Parameters, Des_RelativeVelocity+Feedback_RelativeVelocity, CycleCounter);
 

@@ -55,36 +55,32 @@ set(SOURCES    ${SRC_FOLDER}/InitBalWlkParameters.cpp
                ${SRC_FOLDER}/CpBalWlkCtrlThread.cpp               
                main_walker.cpp)
 
-source_group("Source Files" FILES ${SOURCES})
-source_group("Header Files" FILES ${HEADERS})
-
-include_directories(${EIGEN3_INCLUDE_DIR}
-                    ${wholeBodyInterface_INCLUDE_DIRS}
-                    ${yarpWholeBodyInterface_INCLUDE_DIRS}
-                    ${ICUB_INCLUDE_DIRS}
-                    ${YARP_INCLUDE_DIRS})
-
-include_directories(${CURSES_INCLUDE_DIR})
-include_directories(${HEADERS_FOLDER})
-
-SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ICUB_LINK_FLAGS}")
-
-add_definitions(-D_USE_MATH_DEFINES)
-
-# Executable for the walking controller
-add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
-target_link_libraries(${PROJECT_NAME} ${libqpOASES} iKin ${YARP_LIBRARIES} ${yarpWholeBodyInterface_LIBRARIES} ${CURSES_LIBRARIES})
-
 
 # Defining variable and creating executables for COM Desired Motion planning
 set(COM_SRC_FOLDER      "${CMAKE_CURRENT_SOURCE_DIR}/com-vel-cmd/src")
 set(COM_HEADERS_FOLDER  "${CMAKE_CURRENT_SOURCE_DIR}/com-vel-cmd/include")
 set(COM_KEYBOARD_SRC    main_keyboard.cpp)
 
-set(COM_HEADERS ${COM_HEADERS_FOLDER}/KeyboardReaderSender.h)
-set(COM_SOURCES ${COM_SRC_FOLDER}/KeyboardReaderSender.cpp)
+source_group("Source Files" FILES ${SOURCES} ${COM_SOURCES})
+source_group("Header Files" FILES ${HEADERS} ${COM_HEADERS})
 
-include_directories(${COM_HEADERS_FOLDER})
+include_directories(${EIGEN3_INCLUDE_DIR}
+                    ${wholeBodyInterface_INCLUDE_DIRS}
+                    ${yarpWholeBodyInterface_INCLUDE_DIRS}
+                    ${ICUB_INCLUDE_DIRS}
+                    ${YARP_INCLUDE_DIRS}
+                    ${CURSES_INCLUDE_DIR}
+                    ${HEADERS_FOLDER}
+                    ${COM_HEADERS_FOLDER})
 
-add_executable(KeyboardReaderSender ${COM_KEYBOARD_SRC} ${COM_SOURCES} ${COM_HEADERS})
+SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ICUB_LINK_FLAGS}")
+
+add_definitions(-D_USE_MATH_DEFINES)
+
+# Executable for the walking controller
+add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS} ${COM_SRC_FOLDER}/DesVelocityReader.cpp ${COM_HEADERS_FOLDER}/DesVelocityReader.h)
+target_link_libraries(${PROJECT_NAME} ${libqpOASES} iKin ${YARP_LIBRARIES} ${yarpWholeBodyInterface_LIBRARIES} ${CURSES_LIBRARIES})
+
+# Executable for the keyboard command reader
+add_executable(KeyboardReaderSender ${COM_KEYBOARD_SRC} ${COM_SRC_FOLDER}/KeyboardReaderSender.cpp ${COM_HEADERS_FOLDER}/KeyboardReaderSender.h)
 target_link_libraries(KeyboardReaderSender  ${YARP_LIBRARIES} ${CURSES_LIBRARIES})
