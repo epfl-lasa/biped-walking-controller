@@ -141,7 +141,7 @@ int main(int argc, char **argv) //(int argc, char *argv[])
     int period          = rf.check("period", Value(40), "Looking for controller period").asInt();
     double RunDuration   = rf.check("duration", Value(5), "Looking for Running Duration ").asDouble();
     int FT_feedbackType  = rf.check("FT_feedback", Value(0), "Looking for Running Duration ").asInt();
-    int KeyBoardCommand = rf.check("KeyBoardCommand", Value(0), "Looking for keyboard input ").asInt();
+    int VelocityCmdType = rf.check("VelocityCmdType", Value(0), "Looking for keyboard input ").asInt();
 
     Eigen::Vector3d InitVelocity;
     InitVelocity(0) = rf.check("VelocityX", Value(0.10), "Looking for forward velocity ").asDouble();
@@ -169,18 +169,8 @@ int main(int argc, char **argv) //(int argc, char *argv[])
 
     Time::delay(0.5);   
 
-    // control of the robot through keyboard
-    bool ActiveKeyBoardCtrl = false;
-    if(KeyBoardCommand == 1)
-    {
-        ActiveKeyBoardCtrl = true;
-    }
-    else{
-        ActiveKeyBoardCtrl = false;
-    }  
-
     // Instantiate the Control Thread
-    CpBalWlkCtrlThread myCtrlThread(period, m_moduleName, m_robotName, FT_feedbackType, ActiveKeyBoardCtrl, *robot); //period is 40ms
+    CpBalWlkCtrlThread myCtrlThread(period, m_moduleName, m_robotName, FT_feedbackType, true, *robot); //period is 40ms
 
     // Starting the BalanceWalkingController Thread
     myCtrlThread.start();
@@ -244,14 +234,13 @@ int main(int argc, char **argv) //(int argc, char *argv[])
         incr_vel(2) = keyboardValues->get(2).asDouble();
         printf("Desired Keyboard Command +vx:%4.6f +vy:%4.6f  +wz:%4.6f \n", incr_vel(0), incr_vel(1), incr_vel(2));
 
-        if(myCtrlThread.KeyboardCtrl) //((c= getch())!=27)
+        if(VelocityCmdType == 1) 
         {   
 
             // Add increments
             des_com_vel(0) = des_com_vel(0) + incr_vel(0);
             des_com_vel(1) = des_com_vel(1) + incr_vel(1);
             des_com_vel(2) = des_com_vel(2) + incr_vel(2);
-
 
             // Truncate velocities
             // forward and backward walking 
@@ -267,27 +256,23 @@ int main(int argc, char **argv) //(int argc, char *argv[])
 
             // rotation
             // --------
-            if(des_com_vel(2) >= 0.2 && incr_vel(2) > 0.0) { des_com_vel(2) = 0.2; }
-            if(des_com_vel(2) <= -0.2 && incr_vel(2) < 0.0) {  des_com_vel(2) = -0.2; }
+            if(des_com_vel(2) >= 0.15 && incr_vel(2) > 0.0) { des_com_vel(2) = 0.15; }
+            if(des_com_vel(2) <= -0.15 && incr_vel(2) < 0.0) {  des_com_vel(2) = -0.15; }
         
-
-            printf("Sent Desired Velocity vx:%4.6f vy:%4.6f  wz:%4.6f \n", des_com_vel(0), des_com_vel(1), des_com_vel(2));
-            
-
-            myCtrlThread.Des_RelativeVelocity(0) = des_com_vel(0);
-            myCtrlThread.Des_RelativeVelocity(1) = des_com_vel(1);
-            myCtrlThread.Des_RelativeVelocity(2) = des_com_vel(2);            
-
         }
-        else
+        else if(VelocityCmdType == 0) 
         {
-            // Set the Desired CoM velocity
-            myCtrlThread.Des_RelativeVelocity(0) = 0.0;
-            myCtrlThread.Des_RelativeVelocity(1) = 0.0;
-            myCtrlThread.Des_RelativeVelocity(2) = 0.0; 
+            // Fix COM velocity
+            des_com_vel(0) = 0.05;
+            des_com_vel(1) = 0.0;
+            des_com_vel(2) = 0.0;
         }
-
       
+        printf("Sent Desired Velocity vx:%4.6f vy:%4.6f  wz:%4.6f \n", des_com_vel(0), des_com_vel(1), des_com_vel(2));
+        myCtrlThread.Des_RelativeVelocity(0) = des_com_vel(0);
+        myCtrlThread.Des_RelativeVelocity(1) = des_com_vel(1);
+        myCtrlThread.Des_RelativeVelocity(2) = des_com_vel(2);            
+
         if (!done &&((Time::now()-startTime)> RunDuration))
         {
 
