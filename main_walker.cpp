@@ -194,7 +194,7 @@ int main(int argc, char **argv) //(int argc, char *argv[])
 
     // ==========================================================================
     // Instantiate the Desired CoM Velocity Reader 
-    DesVelocityReader myDesiredCoM( m_moduleName, VelocityCmdType, InitVelocity); 
+    DesVelocityReader myDesiredCoM( m_moduleName, m_robotName, VelocityCmdType, InitVelocity); 
     myDesiredCoM.initReader();
     // ==========================================================================
 
@@ -210,7 +210,7 @@ int main(int argc, char **argv) //(int argc, char *argv[])
         // des_com_vel(2) = myDesiredCoMThread.des_com_vel_(2);
 
         // Read the current desired CoM
-        myDesiredCoM.read();
+        myDesiredCoM.updateDesComVel();
 
         // Get current desired velocity command
         des_com_vel = myDesiredCoM.des_com_vel_;        

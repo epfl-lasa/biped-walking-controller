@@ -22,17 +22,21 @@ class DesVelocityReader
 
     private: 
 
-        string            moduleName_;
-        Eigen::VectorXd   curr_COM_;
-        Eigen::Vector3d   init_vel_;
-        int               VelocityCmdType_;
+        string               moduleName_;
+        string               robotName_;        
+        int                  VelocityCmdType_;
 
         // Creating port for keyboard input cmd
-        Bottle *keyboardValues;
+        Bottle              *keyboardValues;
         BufferedPort<Bottle> KeyboardCmd_port_In;
+        Eigen::Vector3d      init_vel_;    // initial velocity set by user
+        Eigen::VectorXd      incr_vel_;    // factor of velocity increase
 
-        // For Keyboard Input
-        Eigen::VectorXd   incr_vel_;    // factor of velocity increase
+
+        // Creating port for Root-link in world frame pose
+        Bottle              *RootlinkPose_values;
+        BufferedPort<Bottle> RootlinkPose_port_In;
+        Eigen::VectorXd      Rootlink_measurements;
 
         // For DS input from ROS-YARP translator
         //....
@@ -43,12 +47,14 @@ class DesVelocityReader
         
         Eigen::VectorXd des_com_vel_;  // factor of velocity increase        
         
-        DesVelocityReader(string moduleName, int VelocityCmdType, Eigen::Vector3d  init_vel);
+        DesVelocityReader(string moduleName, string robotName, int VelocityCmdType, Eigen::Vector3d  init_vel);
 
         bool initReader();
 
         void stop();
 
-        void read();    
+        void updateCoM();    
+
+        void updateDesComVel();    
 
 };

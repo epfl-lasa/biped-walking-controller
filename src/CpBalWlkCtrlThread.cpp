@@ -38,6 +38,7 @@ CpBalWlkCtrlThread::CpBalWlkCtrlThread(int period, std::string _moduleName, std:
                                                     , Des_RelativeVelocity(3)
                                                     , Feedback_RelativeVelocity(3)
                                                     , m_world2BaseFrameSerialization(16)
+                                                    , world2BaseFrameSerialization_n(16)
                                                     , KeyboardCtrl(ActiveKeyBoardCtrl_)
 				                                    , StopCtrl(false) 	{ 	ThreadPeriod = period; 
 				                                    						ForceFeedbackType = ForceFeedback; 
@@ -107,33 +108,6 @@ bool CpBalWlkCtrlThread::threadInit()
     // get IMU measurements
     BotSensors.getImuOrientationValues();
     BotSensors.getImuAccelerometerValues();
-
-    // keyboard control
-    // KeyboardCtrl  = false;
-    // iskeypportActive = false;
-
-    // // Opening the port for the Keyboard input cmds  moduleName
-    // std::string KeyboardOutputs_port ="/";
-    //             KeyboardOutputs_port += moduleName;
-    //             KeyboardOutputs_port += "/keyboardOutputs:o";
-
-    // if(KeyboardCtrl && !iskeypportActive)
-    // {
-    //     KeyboardCmd_port_In.open("/KeyboardInputCmds:i");
-
-    //     if(!Network::connect(KeyboardOutputs_port.c_str(), KeyboardCmd_port_In.getName().c_str()))
-    //     {
-    //         printf(" Unable to connect to the KeyboardCmdsReaderModule port");
-    //         return false;
-    //     }
-    //     // Reading of measurement
-    //     keyboardValues  = KeyboardCmd_port_In.read(); 
-    //     // alpha_velo.resize(keyboardValues->size());
-    //     // alpha_velo.setZero();
-    //     iskeypportActive = true;
-    // }    
-    // alpha_velo.resize(3);
-    // alpha_velo.setZero();
 
     // correction of joints_offset betwen the simulator and the actual robot
     joints_Offset.resize(RobotDevices->lljoints, 0.0);
@@ -219,6 +193,29 @@ bool CpBalWlkCtrlThread::threadInit()
                                                 RobotKin->RightLegChain->EndEffPose(),
                                                 BotSensors.m_orientation_rpy,  
                                                 CpBalWlkController->GaitTrsf);
+
+
+
+    // *******************************************************************************************
+    // Initializing the kinematic model to get the frames in world reference frame -NADIA
+    // *******************************************************************************************
+    bool linkFound = true;
+    linkFound = robot_model.getFrameList().idToIndex("l_sole", leftFootLinkID);
+    linkFound = linkFound && robot_model.getFrameList().idToIndex("r_sole", rightFootLinkID);
+    linkFound = linkFound && robot_model.getFrameList().idToIndex("l_hand", leftHandLinkID);
+    linkFound = linkFound && robot_model.getFrameList().idToIndex("r_hand", rightHandLinkID);
+    linkFound = linkFound && robot_model.getFrameList().idToIndex("root_link", rootLinkID); 
+
+    if (!linkFound){
+        printf("Could not find frames!\n");
+        return 0;
+    }else{
+        printf("********************** Found ALL FRAMES THAT I WANT!!! **********************\n");
+    }
+    jts_position_n.resize(robotDof);           // q
+    jts_velocity_n.resize(robotDof);           // dq
+    jts_acceleration_n.resize(robotDof);       // ddq
+    
 
     // *******************************************************************************************
     // Instantiation of the robot manipulation module
@@ -382,11 +379,7 @@ bool CpBalWlkCtrlThread::threadInit()
         RobotDevices->iint_right_arm->setInteractionMode(i, VOCAB_IM_STIFF);
     }
      
-    // for (int i=0; i<RobotDevices->lajoints; i++)
-    // {                       
-    //     RobotDevices->ictrl_left_arm->setControlMode(i, VOCAB_CM_POSITION);
-    //     RobotDevices->ictrl_right_arm->setControlMode(i, VOCAB_CM_POSITION);
-    // }
+
 
 
     // ==================================================================================
@@ -488,13 +481,6 @@ void CpBalWlkCtrlThread::threadRelease()
     // close the data Logger
     DataLogger.Close_files();
 
-    // closing the keyboard reader
-    // if(KeyboardCtrl)
-    // {
-    //     KeyboardCmd_port_In.close();
-    // }
-    
-
     // release the CpWalkingController
     CpBalWlkController->ReleaseCpBalWlkController();
 
@@ -591,7 +577,44 @@ void CpBalWlkCtrlThread::run()
     // -------------------------------------------------------------------
     double t_run = Time::now();
     printf("Desired Relative Velocity  vx:%4.6f vy:%4.6f  wz:%4.6f \n", Des_RelativeVelocity(0), Des_RelativeVelocity(1), Des_RelativeVelocity(2));
-    printf("Current Robot COM Position x:%4.6f y:%4.6f  z:%4.6f \n", CoM_measurements(0), CoM_measurements(1), CoM_measurements(2));
+
+    // *****************************************************************************************
+    //  Estimation of the robot state with respect to the world frame -- NADIA (Ended up being completely unncessary)
+    // *****************************************************************************************
+    // bool result = true;
+
+    // //read positions and velocities
+    // result = result && robot_model.getEstimates(wbi::ESTIMATE_JOINT_POS, jts_position_n.data());
+    // // result = result && robot_model.getEstimates(wbi::ESTIMATE_JOINT_VEL, jts_velocity_n.data());
+
+    // if (!result)
+    //     printf("********************** Could not update MODEL! :( **********************\n");
+
+
+    // result = result && robot_model.getEstimates(wbi::ESTIMATE_BASE_POS, world2BaseFrameSerialization_n.data());
+    // wbi::frameFromSerialization(world2BaseFrameSerialization_n.data(), world2BaseFrame_n);
+
+    // if (!result)
+    //     printf("********************** Could not do serialization! :( **********************\n");
+
+    // // left foot Pose
+    // bool ok = true;
+    // ok = robot_model.forwardKinematics(jts_position.data(), world2BaseFrame_n, leftFootLinkID, w_Pose_leftFoot.data());
+    // // right foot pose
+    // ok = ok && robot_model.forwardKinematics(jts_position.data(), world2BaseFrame_n, rightFootLinkID, w_Pose_rightFoot.data());
+    // // left hand pose
+    // ok = ok && robot_model.forwardKinematics(jts_position.data(), world2BaseFrame_n, leftHandLinkID, w_Pose_leftHand.data());
+    // // right hand pose
+    // ok = ok && robot_model.forwardKinematics(jts_position.data(), world2BaseFrame_n, rightHandLinkID, w_Pose_rightHand.data());
+    // // Center of Mass (CoM) Pose
+    // ok = ok && robot_model.forwardKinematics(jts_position.data(), world2BaseFrame_n, wbi::iWholeBodyModel::COM_LINK_ID, w_Pose_CoM.data());
+    // // root link (base)  pose
+    // ok = ok && robot_model.forwardKinematics(jts_position.data(), world2BaseFrame_n, rootLinkID, w_Pose_Base.data());
+
+    // if (!ok)
+    //     printf("********************** Could not extract all frames! :( **********************\n");
+
+    // printf("Current Robot COM Position x:%4.6f y:%4.6f  z:%4.6f \n", w_Pose_CoM(0), w_Pose_CoM(1), w_Pose_CoM(2));
 
     CpBalWlkController->UpdateCpBalWlkController(Parameters, Des_RelativeVelocity+Feedback_RelativeVelocity, CycleCounter);
 

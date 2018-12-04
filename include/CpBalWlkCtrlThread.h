@@ -64,7 +64,7 @@ using namespace yarp::math;
 using namespace std;
 using namespace Eigen;
 
-
+typedef Eigen::Matrix<double, 7, 1> Vector7d;
 
 class CpBalWlkCtrlThread : public RateThread
 {
@@ -208,7 +208,6 @@ public:
     InertialCompensator  *GaitInIMU;
 
     // Ports to sends commands
-//    BufferedPort<yarp::sig::Vector> Joints_ouput_Port;
     Port Joints_ouput_Port;
     BufferedPort<yarp::sig::Vector> CoM_output_Port;
 
@@ -217,6 +216,27 @@ public:
     Vector joints_Offset;
     Vector joints_Offset_left;
     Vector joints_Offset_right;
+
+
+    // Variables for robot states in World Frame -- Nadia
+    int leftFootLinkID;
+    int rightFootLinkID;
+    int leftHandLinkID;
+    int rightHandLinkID;
+    int rootLinkID;
+    int centerOfMassLinkID;
+    int chestLinkID;
+    Vector7d w_Pose_rightHand;
+    Vector7d w_Pose_leftHand;
+    Vector7d w_Pose_leftFoot;
+    Vector7d w_Pose_rightFoot;
+    Vector7d w_Pose_CoM;
+    Vector7d w_Pose_Base;
+    Eigen::VectorXd jts_position_n;           // size : n actuated dof
+    Eigen::VectorXd jts_velocity_n;           // size : n actuated dof
+    Eigen::VectorXd jts_acceleration_n;       // size : n actuated dof
+    Eigen::VectorXd world2BaseFrameSerialization_n;   // size 16
+    wbi::Frame world2BaseFrame_n;
 
   
     // Data_logger
