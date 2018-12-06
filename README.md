@@ -73,26 +73,25 @@ This will create two executables which will placed in ``~/biped-walking-controll
 ## Running the controller
 Running this controller in its current version is still quite elaborate. 
 
-- start yarpserver, in one terminal type the following
+- **Terminal 1** Start yarpserver:
 ```bash
 $ yarpserver
 ```
-- In another terminal (simulation) start gazebo simulator and import include the robot model (`iCub (no hands)`)
+- **Terminal 2** (simulation) start gazebo simulator and import include the robot model (`iCub (no hands)`)
 ```bash
-$ cd ~/robotology-superbuild/robotology
-$ gazebo ./icub-gazebo/worlds/icub.world
+$ gazebo 
 ```
-- In a third terminal, bring the robot in home position 
+- **(Optional)** In a third terminal, bring the robot in home position 
 ```bash
 $ yarpmotorgui --from homePoseBalancing.ini --robot robot_name 
 ```
 robot_name: (e.g. icub or icubSim) and then press the 'Home All' button
 
-- In one terminal launch the keyboard command reader as follows : 
+- **Terminal 3** Launch the keyboard command reader as follows : 
 ```bash
 $ ./KeyboardCommandsReader --from ../config/BalanceWalkingController.ini
 ```
-- In another terminal launch the walking controller as follows : 
+- **Terminal 4** In another terminal launch the walking controller as follows : 
 ```bash
 $ ./BipedWalkingGrasping --from ../config/BalanceWalkingController.ini
 ```
@@ -129,17 +128,10 @@ The configuration file is `BalanceWalkingController.ini` locate in the `config` 
 - `VelocityY`:  the initial lateral velocity of the robot in [m/s]
 - `OmegaZ`:	the initial rotational velocity of the robot about the vertical axis in [m/s]	
 
-```
-Note: should you want to change the velocity at run time, you can do it in the while loop of the main.cpp file. 
-An input port will be added for that purpose soon.
-``` 
-
 
 ### Other parameters
 
 Others parameters are in the `src/InitBalWlkParameters.cpp` file. 
-
-
 
 #### Citing this contribution
 In case you want to cite the content of this controller implementation, please refer to [Capture-point based balance and reactive omnidirectional walking controller](https://ieeexplore.ieee.org/document/8239532) and use the following bibtex entry:
