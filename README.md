@@ -103,18 +103,26 @@ We currently have 3 different ways of generating desired CoM velocity (v<sub>x</
 VelocityCmdType		2
 ```
  1. Fixed Velocity: ``VelocityCmdType		0``
+ ```
+   # Initial velocity Vx [m/s], Vy [m/s],  Wz [rad/s], 
+   VelocityX 			0.01
+   VelocityY 			0.00
+   OmegaZ				   0.00
+ ```
 
  2. Command Velocity via Keyboard increments: ``VelocityCmdType		1``
+ ```
+   variation 			0.005
+ ```
 
  3. Desired Velocity will be generated via a simple linear DS: ``VelocityCmdType		2`` 
-
-   The implemented DS is of the form <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/linear_DS.gif"> whose parameters can be defined as follows:
-  ```
-  # Desired Target with linear DS x [m], y [m], z [m] 
-  kappa               0.2
-  AttractorX			2.00
-  AttractorY          -1.00
-  AttractorZ			0.541591
+ The implemented DS is of the form <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/linear_DS.gif"> whose parameters can be defined as follows:
+ ```
+   # Desired Target with linear DS x [m], y [m], z [m] 
+   kappa        0.2
+   AttractorX			2.00
+   AttractorY   -1.00
+   AttractorZ			0.541591
   ```
   where:
   - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/CoM.gif">: CoM position
