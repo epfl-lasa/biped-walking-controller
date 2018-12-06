@@ -81,7 +81,7 @@ $ yarpserver
 ```bash
 $ gazebo 
 ```
-- **(Optional)** In a third terminal, bring the robot in home position 
+- **(Optional)** In another terminal, bring the robot in home position 
 ```bash
 $ yarpmotorgui --from homePoseBalancing.ini --robot robot_name 
 ```
@@ -95,6 +95,29 @@ $ ./KeyboardCommandsReader --from ../config/BalanceWalkingController.ini
 ```bash
 $ ./BipedWalkingGrasping --from ../config/BalanceWalkingController.ini
 ```
+
+### Testing different walking commands
+We currently have 3 different ways of generating 
+```
+# Control Type 0: Fixed initial velocity, 1: Using Keyboard increments, 2: Using a linear DS 
+VelocityCmdType		2
+```
+1. Fixed Velocity: ``VelocityCmdType		0``
+
+2. Command Velocity via Keyboard increments: ``VelocityCmdType		1``
+
+3. Desired Velocity will be generated via a simple linear DS: ``VelocityCmdType		2`` 
+
+The implemented DS is of the form $x_dot = -\kappa(x - x*)$ whose parameters can be defined in the ``BalanceWalkingController.ini`` as follows:
+```
+# Desired Target with linear DS x [m], y [m], z [m] 
+kappa               0.2
+AttractorX			2.00
+AttractorY          -1.00
+AttractorZ			0.541591
+```
+
+
 
 #### Known Run-time Issues (and solutions)
 - If you get the error `did not find model.urdf` you must replace, `model.urdf` in the `BalanceWalkingController.ini` config file with `~/robotology-superbuild/build/install/share/codyco/robots/icubGazeboSim/model.urdf`
