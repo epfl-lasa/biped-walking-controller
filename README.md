@@ -121,7 +121,7 @@ VelocityCmdType		2
   
    For this test, the ```./KeyboardCommandsReader``` is not necessary.
 
-***To test the ROS interface that generated CoM velocity based on non-linear DS LfD, follow the instructions in [icub-ds-walking](https://github.com/epfl-lasa/icub-ds-walking.git)***
+   ***NOTE: To test the ROS interface that generated CoM velocity based on non-linear DS LfD, follow the instructions in [icub-ds-walking](https://github.com/epfl-lasa/icub-ds-walking.git)***
 
 
 #### Known Run-time Issues (and solutions)
