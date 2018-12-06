@@ -27,11 +27,13 @@ For simulation
 - [Gazebo](http://gazebosim.org/tutorials?tut=install_ubuntu&cat=install): Gazebo7 and libgazebo7: [installation instructions](http://gazebosim.org/tutorials?cat=install&tut=install_ubuntu&ver=7.0) 
 - [gazebo_yarp_plugins](https://github.com/robotology/gazebo-yarp-plugins)
 - [icub-gazebo](https://github.com/robotology/icub-gazebo)
+- [GetLinkWorldPose](https://github.com/epfl-lasa/GetLinkWorldPose.git)
 
 **Easier option (on clean installation):**
 1. Install latest version of Eigen3 as above.
 2. Install Gazebo7 and libgazebo7: [installation instructions](http://gazebosim.org/tutorials?cat=install&tut=install_ubuntu&ver=7.0) 
 3. Install all yarp/iCub/gazebo-plugin libraries with [robotology-superbuild](https://github.com/robotology/robotology-superbuild)
+4. Install and compile the [GetLinkWorldPose](https://github.com/epfl-lasa/GetLinkWorldPose.git) Gazebo plugin, in order to simulate DS-based motion planning.
 
 #### Known Installation Issues (and solutions) for Ubuntu 14.04 [Not working, Ubuntu 16 is needed!]
 - YARP needs CMake version >3.5, if you have Ubuntu 14.04, this can be installed by following the instructions [here](https://www.claudiokuenzler.com/blog/755/install-upgrade-cmake-3.10.1-ubuntu-14.04-trusty-alternatives#.XAKUHxgnapo)
