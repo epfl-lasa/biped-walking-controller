@@ -64,8 +64,9 @@ $ cd ~/biped-walking-controller
 $ mkdir build && cd build
 $ cmake .. && make
 ```
-This will create two executables which will placed in ``~/biped-walking-controller/build``.
-- ``./BipedWalkingGrasping``: executable that runs the walking controller
+This will create three executables which will placed in ``~/biped-walking-controller/build``.
+- ``./BipedWalkingGrasping``: executable that runs the walking controller with different desired CoM velocity commands
+- ``./BipedWalkingGrasping_ROS``: executable that runs the walking controller with DS LfD via ROS connections
 - ``./KeyBoardCommandReader``: executable that runs a keyboard-command-reader in which the user can set the desired velocity with keyboard commands.
 
 ---
@@ -115,7 +116,7 @@ VelocityCmdType		2
    variation 0.005
  ```
 
- 3. Desired Velocity will be generated via a simple linear DS: ``VelocityCmdType		2`` 
+ 3. Desired Velocity will be generated via a simple linear DS: ``VelocityCmdType		2``   
  The implemented DS is of the form <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/linear_DS.gif"> whose parameters can be defined as follows:
  ```
    # Desired Target with linear DS x [m], y [m], z [m] 
@@ -130,6 +131,8 @@ VelocityCmdType		2
   - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/kappa.gif">: DS gain 
   
   For this test, the ```./KeyboardCommandsReader``` is not necessary.
+
+***To test the ROS interface that generated CoM velocity based on non-linear DS LfD, follow the instructions in [icub-ds-walking](https://github.com/epfl-lasa/icub-ds-walking.git)***
 
 
 #### Known Run-time Issues (and solutions)
