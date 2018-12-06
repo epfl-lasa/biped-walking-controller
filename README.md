@@ -95,8 +95,8 @@ VelocityCmdType		2
  1. Fixed Velocity: ``VelocityCmdType		0``
  ```
    # Initial velocity Vx [m/s], Vy [m/s],  Wz [rad/s], 
-   VelocityX 			0.01
-   VelocityY 			0.00
+   VelocityX    0.01
+   VelocityY    0.00
    OmegaZ       0.00
  ```
 
