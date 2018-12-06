@@ -114,12 +114,12 @@ VelocityCmdType		2
    AttractorY -1.00
    AttractorZ 0.541591
   ```
-  where:
-  - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/CoM.gif">: CoM position
-  - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/attractor.gif">: Attractor (target)
-  - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/kappa.gif">: DS gain 
+   where:
+   - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/CoM.gif">: CoM position
+   - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/attractor.gif">: Attractor (target)
+   - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/kappa.gif">: DS gain 
   
-  For this test, the ```./KeyboardCommandsReader``` is not necessary.
+   For this test, the ```./KeyboardCommandsReader``` is not necessary.
 
 ***To test the ROS interface that generated CoM velocity based on non-linear DS LfD, follow the instructions in [icub-ds-walking](https://github.com/epfl-lasa/icub-ds-walking.git)***
 
