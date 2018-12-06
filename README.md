@@ -108,7 +108,7 @@ VelocityCmdType		2
 
  3. Desired Velocity will be generated via a simple linear DS: ``VelocityCmdType		2`` 
 
-   The implemented DS is of the form <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/linear_DS.png"> whose parameters can be defined as follows:
+   The implemented DS is of the form <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/linear_DS.gif"> whose parameters can be defined as follows:
   ```
   # Desired Target with linear DS x [m], y [m], z [m] 
   kappa               0.2
@@ -117,9 +117,9 @@ VelocityCmdType		2
   AttractorZ			0.541591
   ```
   where:
-  - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/CoM.png">: CoM position
-  - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/attractor.png">: Attractor (target)
-  - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/kappa.png">: DS gain 
+  - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/CoM.gif">: CoM position
+  - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/attractor.gif">: Attractor (target)
+  - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/kappa.gif">: DS gain 
 
 
 #### Known Run-time Issues (and solutions)
