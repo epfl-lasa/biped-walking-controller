@@ -55,7 +55,6 @@ set(SOURCES    ${SRC_FOLDER}/InitBalWlkParameters.cpp
                ${SRC_FOLDER}/CpBalWlkCtrlThread.cpp               
                main_walker.cpp)
 
-
 # Defining variable and creating executables for COM Desired Motion planning
 set(COM_SRC_FOLDER      "${CMAKE_CURRENT_SOURCE_DIR}/com-vel-cmd/src")
 set(COM_HEADERS_FOLDER  "${CMAKE_CURRENT_SOURCE_DIR}/com-vel-cmd/include")
@@ -77,8 +76,8 @@ SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ICUB_LINK_FLAGS}")
 
 add_definitions(-D_USE_MATH_DEFINES)
 
-# Executable for the walking controller
-add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS} ${COM_SRC_FOLDER}/DesVelocityReader.cpp ${COM_HEADERS_FOLDER}/DesVelocityReader.h)
+# Executable for standalone walking controller (with fixed velocity/keyboard input/linear DS)
+add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS} ${COM_SRC_FOLDER}/DesVelocityCommand.cpp ${COM_HEADERS_FOLDER}/DesVelocityCommand.h)
 target_link_libraries(${PROJECT_NAME} ${libqpOASES} iKin ${YARP_LIBRARIES} ${yarpWholeBodyInterface_LIBRARIES} ${CURSES_LIBRARIES})
 
 # Executable for the keyboard command reader

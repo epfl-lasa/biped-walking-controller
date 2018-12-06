@@ -1,15 +1,19 @@
-#include "DesVelocityReader.h"
+#include "DesVelocityCommand.h"
 
-DesVelocityReader::DesVelocityReader(string moduleName, string robotName, int VelocityCmdType, Eigen::Vector3d  init_vel)
+DesVelocityCommand::DesVelocityCommand(string moduleName, string robotName, int VelocityCmdType, Eigen::Vector3d  init_vel)
                                                     : moduleName_(moduleName)
                                                     , robotName_(robotName)
                                                     , VelocityCmdType_(VelocityCmdType)
                                                     , init_vel_(init_vel){}
 
 
-bool DesVelocityReader::initReader(){
+bool DesVelocityCommand::initReader(){
 
 
+
+    des_com_vel_.resize(3);
+    des_com_vel_.setZero();
+    
     if (VelocityCmdType_ < 2){
         // ====== Opening the port for the Keyboard input cmds w/moduleName ====== //
         std::string KeyboardOutputs_port ="/";
@@ -20,19 +24,6 @@ bool DesVelocityReader::initReader(){
         KeyboardCmd_port_In.open("/KeyboardInputCmds:i");
 
         if(!Network::connect(KeyboardOutputs_port.c_str(), KeyboardCmd_port_In.getName().c_str())){
-            printf(" Unable to connect to the KeyboardCmdsReaderModule port");
-            return false;
-        }
-
-
-        // ====== Opening the port for Root-Link in World (CoM) Pose reader w/robotName ====== //
-        std::string RootlinkPose_portName="/";
-        RootlinkPose_portName += robotName_;
-        RootlinkPose_portName += "/get_root_link_WorldPose:o";
-
-
-        RootlinkPose_port_In.open("/RootlinkPose_In:i");
-        if(!Network::connect(RootlinkPose_portName.c_str(), RootlinkPose_port_In.getName().c_str())){
             printf(" Unable to connect to the KeyboardCmdsReaderModule port");
             return false;
         }
@@ -48,6 +39,18 @@ bool DesVelocityReader::initReader(){
 
     }
 
+    // ====== Opening the port for Root-Link in World (CoM) Pose reader w/robotName ====== //
+    std::string RootlinkPose_portName="/";
+    RootlinkPose_portName += robotName_;
+    RootlinkPose_portName += "/get_root_link_WorldPose:o";
+
+
+    RootlinkPose_port_In.open("/RootlinkPose_In:i");
+    if(!Network::connect(RootlinkPose_portName.c_str(), RootlinkPose_port_In.getName().c_str())){
+        printf(" Unable to connect to the KeyboardCmdsReaderModule port");
+        return false;
+    }
+
     // ====== Opening the port to publish the Aligned CoM in position+quaternion ====== //
     std::string CoMPortName = "/";
     CoMPortName += robotName_;
@@ -59,28 +62,29 @@ bool DesVelocityReader::initReader(){
 
     // ======  Update CoM by reading it from Gazebo->transforming it->Sending to ROS ====== //
     updateCoM();
-    des_com_vel_.resize(3);
-    des_com_vel_.setZero();
 
     // Set maximum velocity values
     max_v = 0.2;
     max_w = 0.2;
+    kappa_ = 0.1;
 
     return true; 
 }
 
 
-void DesVelocityReader::stop(){
+void DesVelocityCommand::stop(){
 
     // Close all in/out ports
-    KeyboardCmd_port_In.close();
     RootlinkPose_port_In.close();
     CoMPose_port_Out.close();
+
+    if (VelocityCmdType_ < 2)
+        KeyboardCmd_port_In.close();
 
 }
 
 
-void DesVelocityReader::updateCoM(){
+void DesVelocityCommand::updateCoM(){
 
     RootlinkPose_values = RootlinkPose_port_In.read(); 
     Rootlink_measurements.resize(RootlinkPose_values->size());    
@@ -138,16 +142,20 @@ void DesVelocityReader::updateCoM(){
 
 }
 
-void DesVelocityReader::setAttractor(Eigen::Vector3d attractor){
+void DesVelocityCommand::setAttractor(Eigen::Vector3d attractor){
     attractor_ = attractor;
     std::cout << "Desired Root-Link (CoM) Target x: " << attractor_(0) << " y:" << attractor_(1) << " z:" << attractor_(2) << std::endl;
 }
 
 
-// This can be a separate class of sets of different DS; e.g. linear, non-linear, lags
-Eigen::Vector3d DesVelocityReader::linearDS(double kappa){
+void DesVelocityCommand::setkappa(double kappa){
+    kappa_ = kappa;
+}
+
+Eigen::Vector3d DesVelocityCommand::linearDS(double kappa){
     Eigen::Vector3d x_dot;
     Eigen::Vector3d x_com;
+
     for(int i=0; i<x_com.size(); i++)
         x_com(i) =  Rootlink_measurements(i);
 
@@ -156,7 +164,7 @@ Eigen::Vector3d DesVelocityReader::linearDS(double kappa){
     return x_dot;
 }
 
-double DesVelocityReader::computeAngularVelocity(Eigen::Vector3d x_dot){
+double DesVelocityCommand::computeAngularVelocity(Eigen::Vector3d x_dot){
 
     Eigen::Vector3d ds_dir    = x_dot.normalized();
     Eigen::Vector3d robot_dir(CoM_orient_rot(0,0),CoM_orient_rot(1,0),CoM_orient_rot(2,0));
@@ -185,7 +193,7 @@ double DesVelocityReader::computeAngularVelocity(Eigen::Vector3d x_dot){
     return ang_vel(2);
 }
 
-void DesVelocityReader::updateDesComVel(){
+void DesVelocityCommand::updateDesComVel(){
                  
 
     if (VelocityCmdType_ < 2){
@@ -237,10 +245,8 @@ void DesVelocityReader::updateDesComVel(){
         // For DS Velocity Command Type (2)
         updateCoM();
 
-        double kappa = 0.1;
         Eigen::Vector3d v_des;
         double w_z;
-
         double dist_targ = (CoM_pos-attractor_).norm();
         std::cout << "Distance to target: "<< dist_targ <<std::endl;
 
@@ -248,12 +254,12 @@ void DesVelocityReader::updateDesComVel(){
             std::cout << "Attractor Reached!"<< std::endl;
             des_com_vel_(0) = NAN;
         }else{
-            v_des = linearDS(kappa);
+            v_des = linearDS(kappa_);
             w_z   = computeAngularVelocity(v_des);
             std::cout << "Desired (CoM) Velocity DS v_x: " << v_des(0) << " v_y:" << v_des(1) << " w_z:" << w_z << std::endl;
 
             // Slow down angular velocity
-            w_z   = kappa*w_z;
+            w_z   = kappa_*w_z;
 
             // Truncate values with maximum velocity limits
             if(v_des(0) > max_v)
@@ -282,4 +288,3 @@ void DesVelocityReader::updateDesComVel(){
 
 }
     
-

@@ -18,7 +18,7 @@
 using namespace std;
 using namespace yarp::os;
 
-class DesVelocityReader
+class DesVelocityCommand
 {
      
 
@@ -27,7 +27,7 @@ class DesVelocityReader
         string               moduleName_;
         string               robotName_;        
         int                  VelocityCmdType_;
-        double               max_v, max_w;
+        double               max_v, max_w, kappa_;
 
         // Creating port for keyboard input cmd
         Bottle              *keyboardValues;
@@ -58,7 +58,7 @@ class DesVelocityReader
         
         Eigen::VectorXd des_com_vel_;
         
-        DesVelocityReader(string moduleName, string robotName, int VelocityCmdType, Eigen::Vector3d  init_vel);
+        DesVelocityCommand(string moduleName, string robotName, int VelocityCmdType, Eigen::Vector3d  init_vel);
 
         bool initReader();
 
@@ -69,6 +69,8 @@ class DesVelocityReader
         void updateDesComVel();    
 
         void setAttractor(Eigen::Vector3d attractor);
+
+        void setkappa(double kappa);
 
         Eigen::Vector3d linearDS(double kappa);
 

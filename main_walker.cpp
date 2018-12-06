@@ -48,7 +48,7 @@
 #include "OptimalFilters.h"
 
 #include "CpBalWlkCtrlThread.h"
-#include "DesVelocityReader.h"
+#include "DesVelocityCommand.h"
 
 #include <qpOASES.hpp>
 
@@ -74,8 +74,10 @@ int main(int argc, char **argv) //(int argc, char *argv[])
         printf("No yarp network, quitting\n");
         return 1;
     }
+    
     // ====================================================================================
-    // creation of a ressource finder object
+    // Creation of a resource finder object
+    // ====================================================================================
     yarp::os::ResourceFinder rf; // = yarp::os::ResourceFinder::getResourceFinderSingleton();    
     rf.setVerbose(true);                                        //logs searched directories
     rf.setDefaultConfigFile("BalanceWalkingController.ini");    //default config file name.
@@ -152,16 +154,17 @@ int main(int argc, char **argv) //(int argc, char *argv[])
 
     // Load Desired Initial Velocity for Velocity Commands Option 2 (DS)
     Eigen::Vector3d Attractor;
-    int DS_type  = rf.check("DS_type",    Value(0),   "DS-Type").asInt();
-    Attractor(0) = rf.check("AttractorX", Value(0.0), "Attractor x position").asDouble();
-    Attractor(1) = rf.check("AttractorY", Value(0.0), "Attractor y position").asDouble();
-    Attractor(2) = rf.check("AttractorZ", Value(0.0), "Attractor z position").asDouble();    
+    double kappa  = rf.check("kappa",     Value(0.005),   "kappa").asDouble();
+    Attractor(0)  = rf.check("AttractorX", Value(0.0), "Attractor x position").asDouble();
+    Attractor(1)  = rf.check("AttractorY", Value(0.0), "Attractor y position").asDouble();
+    Attractor(2)  = rf.check("AttractorZ", Value(0.0), "Attractor z position").asDouble();    
 
     // convert the period from millisecond to second
     double m_period = 0.001 * (double) period;
     std::cout << " the duration is : \n"  << RunDuration << std::endl;
 
-    // creation of the wbi robot object
+    // =================================
+    // Creation of the wbi robot object
     // =================================
     wbi::wholeBodyInterface* robot;
     robot = new yarpWbi::yarpWholeBodyInterface(m_moduleName.c_str(), wbProperties);
@@ -177,7 +180,9 @@ int main(int argc, char **argv) //(int argc, char *argv[])
 
     Time::delay(0.5);   
 
+    // =================================
     // Instantiate the Control Thread
+    // =================================
     CpBalWlkCtrlThread myCtrlThread(period, m_moduleName, m_robotName, FT_feedbackType, true, *robot); //period is 40ms
 
     // Starting the BalanceWalkingController Thread
@@ -186,7 +191,6 @@ int main(int argc, char **argv) //(int argc, char *argv[])
      // variables for end of walking configuration
     int n_Samp1, n_Samp_init;
         n_Samp1 = (int)(round(myCtrlThread.Parameters->DurationSteps[0]/myCtrlThread.Parameters->SamplingTime));
-
 
     // Set the Initial Desired CoM velocity
     myCtrlThread.Des_RelativeVelocity = InitVelocity;
@@ -199,23 +203,26 @@ int main(int argc, char **argv) //(int argc, char *argv[])
     bool AlignFeet = false;
     bool noInput   = false;
 
-    // ==========================================================================
-    // Instantiate the Desired CoM Velocity Reader 
-    DesVelocityReader myDesiredCoM( m_moduleName, m_robotName, VelocityCmdType, InitVelocity); 
+    // =======================================================
+    // Instantiate the Desired CoM Velocity Command Generator 
+    // =======================================================
+    DesVelocityCommand myDesiredCoM( m_moduleName, m_robotName, VelocityCmdType, InitVelocity); 
     myDesiredCoM.initReader();
     myDesiredCoM.setAttractor(Attractor);        
 
-    if (VelocityCmdType == 2)
+    if (VelocityCmdType == 2){
         myDesiredCoM.setAttractor(Attractor);        
+        myDesiredCoM.setkappa(kappa);
+    }
 
-cout << "heteddd" << endl;
-    // ==========================================================================
 
+    // =======================================================
+    //                  MAIN CONTROL LOOP
+    // =======================================================
     // Variable for Desired CoM Velocity Given my port
     Eigen::VectorXd des_com_vel;
     des_com_vel.resize(3);
     des_com_vel.setZero();
-
     while(!(done && finalConf) && !myCtrlThread.StopCtrl && !isnan(des_com_vel(0))){
 
         // Read the current desired CoM
@@ -256,8 +263,8 @@ cout << "heteddd" << endl;
 
     }
 
-    // Set to Zero the Desired CoM velocity before stoping
-    myCtrlThread.Des_RelativeVelocity(0) = 0.00;  // TO DO
+    // Set to Zero the Desired CoM velocity before stopping
+    myCtrlThread.Des_RelativeVelocity(0) = 0.00;  
     myCtrlThread.Des_RelativeVelocity(1) = 0.00;
     myCtrlThread.Des_RelativeVelocity(2) = 0.00;
 
