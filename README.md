@@ -12,7 +12,7 @@ For more details see [Capture-point based balance and reactive omnidirectional w
 
 ---
 
-## System Requirements
+### System Requirements
 Ubuntu 16.04 and Gazebo >=7
 
 ### Dependencies
