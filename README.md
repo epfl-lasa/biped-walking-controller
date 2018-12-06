@@ -37,15 +37,13 @@ For simulation
 
 ---
 
-## Compilation and build
+### Compilation and build
 
 Clone the repository
 
 ```bash
 $ git clone https://github.com/epfl-lasa/biped-walking-controller.git
 ```
-
-### build
 Edit first the `CMakeLists.txt` file to indicate :
 - the correct paths of qpOASES lib file (`libqpOASES.so`) and qpOASES directory
 - the correct path to eigen3
@@ -64,7 +62,7 @@ This will create three executables which will placed in ``~/biped-walking-contro
 
 ---
 
-## Running the controller
+### Running the controller
 Running this controller in its current version is still quite elaborate. 
 
 - **Terminal 1** Start yarpserver:
