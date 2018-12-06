@@ -10,55 +10,57 @@ DesVelocityReader::DesVelocityReader(string moduleName, string robotName, int Ve
 bool DesVelocityReader::initReader(){
 
 
-    // ====== Opening the port for the Keyboard input cmds w/moduleName ====== //
-    std::string KeyboardOutputs_port ="/";
-                KeyboardOutputs_port += moduleName_;
-                KeyboardOutputs_port += "/keyboardOutputs:o";
+    if (VelocityCmdType_ < 2){
+        // ====== Opening the port for the Keyboard input cmds w/moduleName ====== //
+        std::string KeyboardOutputs_port ="/";
+                    KeyboardOutputs_port += moduleName_;
+                    KeyboardOutputs_port += "/keyboardOutputs:o";
 
 
-    KeyboardCmd_port_In.open("/KeyboardInputCmds:i");
+        KeyboardCmd_port_In.open("/KeyboardInputCmds:i");
 
-    if(!Network::connect(KeyboardOutputs_port.c_str(), KeyboardCmd_port_In.getName().c_str())){
-        printf(" Unable to connect to the KeyboardCmdsReaderModule port");
-        return false;
-    }
-
-
-    // ====== Opening the port for Root-Link in World (CoM) Pose reader w/robotName ====== //
-
-    std::string RootlinkPose_portName="/";
-    RootlinkPose_portName += robotName_;
-    RootlinkPose_portName += "/get_root_link_WorldPose:o";
+        if(!Network::connect(KeyboardOutputs_port.c_str(), KeyboardCmd_port_In.getName().c_str())){
+            printf(" Unable to connect to the KeyboardCmdsReaderModule port");
+            return false;
+        }
 
 
-    RootlinkPose_port_In.open("/RootlinkPose_In:i");
-    if(!Network::connect(RootlinkPose_portName.c_str(), RootlinkPose_port_In.getName().c_str())){
-        printf(" Unable to connect to the KeyboardCmdsReaderModule port");
-        return false;
-    }
-
-    std::cout << " ================== Initial ROTATION!!!! ==================="<< std::endl;
-    updateCoM();
-    std::cout << "Initial Velocity vx:" << init_vel_(0) << " vy:" << init_vel_(1) <<  " wz:" << init_vel_(2) << std::endl;
-    std::cout << " ================== Initial ROTATION!!!! ==================="<< std::endl;
-
-    des_com_vel_.resize(3);
-    des_com_vel_.setZero();
+        // ====== Opening the port for Root-Link in World (CoM) Pose reader w/robotName ====== //
+        std::string RootlinkPose_portName="/";
+        RootlinkPose_portName += robotName_;
+        RootlinkPose_portName += "/get_root_link_WorldPose:o";
 
 
-    // ======  Filling in Initial Velocity Vector====== //
-    if(VelocityCmdType_ < 2){
-        
-        keyboardValues  = KeyboardCmd_port_In.read(); 
+        RootlinkPose_port_In.open("/RootlinkPose_In:i");
+        if(!Network::connect(RootlinkPose_portName.c_str(), RootlinkPose_port_In.getName().c_str())){
+            printf(" Unable to connect to the KeyboardCmdsReaderModule port");
+            return false;
+        }
+
+        keyboardValues  = KeyboardCmd_port_In.read();
         incr_vel_.resize(keyboardValues->size());
         incr_vel_.setZero();
 
         std::cout << "Initial Velocity vx:" << init_vel_(0) << " vy:" << init_vel_(1) <<  " wz:" << init_vel_(2) << std::endl;
         des_com_vel_(0) = init_vel_(0);
         des_com_vel_(1) = init_vel_(1);
-        des_com_vel_(2) = init_vel_(2);           
+        des_com_vel_(2) = init_vel_(2);
+
     }
 
+    // ====== Opening the port to publish the Aligned CoM in position+quaternion ====== //
+    std::string CoMPortName = "/";
+    CoMPortName += robotName_;
+    CoMPortName += "/CoMPose:o";
+
+    CoMPose_port_Out.open(CoMPortName.c_str());
+    CoMPoses.resize(7, 0.0);
+
+
+    // ======  Update CoM by reading it from Gazebo->transforming it->Sending to ROS ====== //
+    updateCoM();
+    des_com_vel_.resize(3);
+    des_com_vel_.setZero();
 
     // Set maximum velocity values
     max_v = 0.2;
@@ -70,8 +72,11 @@ bool DesVelocityReader::initReader(){
 
 void DesVelocityReader::stop(){
 
+    // Close all in/out ports
     KeyboardCmd_port_In.close();
-    return ;
+    RootlinkPose_port_In.close();
+    CoMPose_port_Out.close();
+
 }
 
 
@@ -92,8 +97,7 @@ void DesVelocityReader::updateCoM(){
         CoM_orient_rpy(i) = Rootlink_measurements(CoM_pos.rows() + i);
 
     std::cout << "CoM position    x: " << CoM_pos(0) << " y:" << CoM_pos(1) << " z:" << CoM_pos(2) << std::endl;
-//    std::cout << "CoM orientation roll: " << CoM_orient_rpy(0) << " pitch:" << CoM_orient_rpy(1) << " yaw:" << CoM_orient_rpy(2) <<  std::endl;
-
+    std::cout << "CoM orientation roll: " << CoM_orient_rpy(0) << " pitch:" << CoM_orient_rpy(1) << " yaw:" << CoM_orient_rpy(2) <<  std::endl;
 
     // Create Rotation matrix from RPY angles
     Eigen::Matrix3d Rot_z, CoM_orient_robot;
@@ -114,7 +118,23 @@ void DesVelocityReader::updateCoM(){
               0,   0 , 1;
 
     CoM_orient_rot = CoM_orient_robot*Rot_z;
-//    std:: cout << "Aligned CoM Rotation matrix "<< std::endl << CoM_orient_rot << std::endl;
+
+    // Convert CoM Rotation matrix to quaternion (to send to ROS)
+    CoM_orient_quat = Eigen::Quaterniond(CoM_orient_rot);
+    yarp::sig::Vector &output_CoMPose = CoMPose_port_Out.prepare();
+
+    // Fill in CoMPoses vector
+    CoMPoses[0] = CoM_pos(0);
+    CoMPoses[1] = CoM_pos(1);
+    CoMPoses[2] = CoM_pos(2);
+    CoMPoses[3] = CoM_orient_quat.x();
+    CoMPoses[4] = CoM_orient_quat.y();
+    CoMPoses[5] = CoM_orient_quat.z();
+    CoMPoses[6] = CoM_orient_quat.w();
+
+    // Send out
+    output_CoMPose = CoMPoses;
+    CoMPose_port_Out.write();
 
 }
 
@@ -141,7 +161,6 @@ double DesVelocityReader::computeAngularVelocity(Eigen::Vector3d x_dot){
     Eigen::Vector3d ds_dir    = x_dot.normalized();
     Eigen::Vector3d robot_dir(CoM_orient_rot(0,0),CoM_orient_rot(1,0),CoM_orient_rot(2,0));
     robot_dir = robot_dir.normalized();
-//    double rot_angle  = acos(dot_dir/(ds_dir.norm()*robot_dir.norm()));
     double rot_angle  = atan2(ds_dir(1),ds_dir(0)) - atan2(robot_dir(1),robot_dir(0));
     std::cout << "Desired Rotation Angle: " << rot_angle << std::endl;
 
@@ -163,8 +182,6 @@ double DesVelocityReader::computeAngularVelocity(Eigen::Vector3d x_dot){
     Omega_x = Rot_diff.log();
 
     Eigen::Vector3d ang_vel (Omega_x(2,1),Omega_x(0,2),Omega_x(1,0));
-//    std::cout << "Angular Velocity w_x:" << ang_vel(0) << " w_y:" << ang_vel(1) << " w_z:" << ang_vel(2);
-
     return ang_vel(2);
 }
 
@@ -259,8 +276,6 @@ void DesVelocityReader::updateDesComVel(){
                 des_com_vel_(2) = -max_w;
             else
                 des_com_vel_(2) = w_z;
-
-
         }
 
     }

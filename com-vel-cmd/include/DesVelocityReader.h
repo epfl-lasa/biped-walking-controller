@@ -36,14 +36,18 @@ class DesVelocityReader
         Eigen::VectorXd      incr_vel_;    // factor of velocity increase
 
 
-        // Creating port for Root-link in world frame pose
+        // Creating port for reading Root-link in world frame pose
         Bottle              *RootlinkPose_values;
         BufferedPort<Bottle> RootlinkPose_port_In;
         Eigen::VectorXd      Rootlink_measurements;
         Eigen::Vector3d      CoM_pos;
         Eigen::Vector3d      CoM_orient_rpy;
         Eigen::Matrix3d      CoM_orient_rot;
+        Eigen::Quaterniond   CoM_orient_quat;
 
+        // Creating port for publishing CoM pose of robot in world frame
+        BufferedPort<yarp::sig::Vector> CoMPose_port_Out;
+        yarp::sig::Vector               CoMPoses;
 
         // For DS input
         Eigen::Vector3d      attractor_;    // initial velocity set by user
