@@ -35,13 +35,6 @@ For simulation
 3. Install all yarp/iCub/gazebo-plugin libraries with [robotology-superbuild](https://github.com/robotology/robotology-superbuild)
 4. Install and compile the [GetLinkWorldPose](https://github.com/epfl-lasa/GetLinkWorldPose.git) Gazebo plugin, in order to simulate DS-based motion planning.
 
-#### Known Installation Issues (and solutions) for Ubuntu 14.04 [Not working, Ubuntu 16 is needed!]
-- YARP needs CMake version >3.5, if you have Ubuntu 14.04, this can be installed by following the instructions [here](https://www.claudiokuenzler.com/blog/755/install-upgrade-cmake-3.10.1-ubuntu-14.04-trusty-alternatives#.XAKUHxgnapo)
-- If you're trying to install YARP in Ubuntu 14.04 with ROS-Indigo installed in it, you will probably get a compiling error regarding yarpcar_xmlrpc component, solution is found [here](https://github.com/robotology/yarp/issues/1323)
-- GCC/G++ version >=5 is necessary, to install follow instructions [here](https://gist.github.com/beci/2a2091f282042ed20cda)
-- [gazebo_yarp_plugins](https://github.com/robotology/gazebo-yarp-plugins) needs Boost version >=1.55, Ubuntu 14.04 comes with version 1.54. To upgrade boost by follow instructions [here](https://codeyarns.com/2013/12/27/how-to-upgrade-the-boost-library-on-ubuntu/).
-***Update***: ``libgazebo7-dev`` which is needed to add plugins to gazebo only works with ``libboost-all-dev`` which becomes conflicted when installing ``libboost1.55-dev`` as it is hard-coded to point to ``libboost1.54-dev``. This was a waste of time. ***You NEED Ubuntu 16!*** Otherwise, if someone finds the solution, please write it here. -Nadia
-
 ---
 
 ## Compilation and build
@@ -185,3 +178,12 @@ In case you want to cite the content of this controller implementation, please r
   organization={IEEE}
 }
 ```
+
+---
+
+#### Known Installation Issues (and solutions) for Ubuntu 14.04 [Not working, Ubuntu 16 is needed!]
+- YARP needs CMake version >3.5, if you have Ubuntu 14.04, this can be installed by following the instructions [here](https://www.claudiokuenzler.com/blog/755/install-upgrade-cmake-3.10.1-ubuntu-14.04-trusty-alternatives#.XAKUHxgnapo)
+- If you're trying to install YARP in Ubuntu 14.04 with ROS-Indigo installed in it, you will probably get a compiling error regarding yarpcar_xmlrpc component, solution is found [here](https://github.com/robotology/yarp/issues/1323)
+- GCC/G++ version >=5 is necessary, to install follow instructions [here](https://gist.github.com/beci/2a2091f282042ed20cda)
+- [gazebo_yarp_plugins](https://github.com/robotology/gazebo-yarp-plugins) needs Boost version >=1.55, Ubuntu 14.04 comes with version 1.54. To upgrade boost by follow instructions [here](https://codeyarns.com/2013/12/27/how-to-upgrade-the-boost-library-on-ubuntu/).
+***Update***: ``libgazebo7-dev`` which is needed to add plugins to gazebo only works with ``libboost-all-dev`` which becomes conflicted when installing ``libboost1.55-dev`` as it is hard-coded to point to ``libboost1.54-dev``. This was a waste of time. ***You NEED Ubuntu 16!*** Otherwise, if someone finds the solution, please write it here. -Nadia
