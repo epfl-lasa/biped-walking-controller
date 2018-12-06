@@ -96,27 +96,30 @@ $ ./KeyboardCommandsReader --from ../config/BalanceWalkingController.ini
 $ ./BipedWalkingGrasping --from ../config/BalanceWalkingController.ini
 ```
 
-### Testing different walking commands
-We currently have 3 different ways of generating 
+#### Testing different walking commands
+We currently have 3 different ways of generating desired CoM velocity (v<sub>x</sub>, v<sub>y</sub>, w<sub>z</sub>). These types and their parameters can be defined in the config file: ``BalanceWalkingController.ini`` like so,
 ```
 # Control Type 0: Fixed initial velocity, 1: Using Keyboard increments, 2: Using a linear DS 
 VelocityCmdType		2
 ```
-1. Fixed Velocity: ``VelocityCmdType		0``
+ 1. Fixed Velocity: ``VelocityCmdType		0``
 
-2. Command Velocity via Keyboard increments: ``VelocityCmdType		1``
+ 2. Command Velocity via Keyboard increments: ``VelocityCmdType		1``
 
-3. Desired Velocity will be generated via a simple linear DS: ``VelocityCmdType		2`` 
+ 3. Desired Velocity will be generated via a simple linear DS: ``VelocityCmdType		2`` 
 
-The implemented DS is of the form $x_dot = -\kappa(x - x*)$ whose parameters can be defined in the ``BalanceWalkingController.ini`` as follows:
-```
-# Desired Target with linear DS x [m], y [m], z [m] 
-kappa               0.2
-AttractorX			2.00
-AttractorY          -1.00
-AttractorZ			0.541591
-```
-
+   The implemented DS is of the form <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/linear_DS.png"> whose parameters can be defined as follows:
+  ```
+  # Desired Target with linear DS x [m], y [m], z [m] 
+  kappa               0.2
+  AttractorX			2.00
+  AttractorY          -1.00
+  AttractorZ			0.541591
+  ```
+  where:
+  - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/CoM.png">: CoM position
+  - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/attractor.png">: Attractor (target)
+  - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/kappa.png">: DS gain 
 
 
 #### Known Run-time Issues (and solutions)
