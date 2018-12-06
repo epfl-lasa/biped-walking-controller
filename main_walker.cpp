@@ -136,22 +136,29 @@ int main(int argc, char **argv) //(int argc, char *argv[])
         return -1;
     }
 
-    //Load configuration-time parameters
-    std::string m_moduleName = rf.check("name", Value("CpBalanceWalkingController"), "Looking for module name").asString();
-    std::string m_robotName = rf.check("robot", Value("icubGazeboSim"), "Looking for robot name").asString();
-    int period          = rf.check("period", Value(40), "Looking for controller period").asInt();
-    double RunDuration   = rf.check("duration", Value(5), "Looking for Running Duration ").asDouble();
-    int FT_feedbackType  = rf.check("FT_feedback", Value(0), "Looking for Running Duration ").asInt();
-    int VelocityCmdType = rf.check("VelocityCmdType", Value(0), "Looking for keyboard input ").asInt();
+    // Load configuration-time parameters
+    std::string m_moduleName = rf.check("name",           Value(""), "Looking for module name").asString();
+    std::string m_robotName  = rf.check("robot",          Value(""), "Looking for robot name").asString();
+    int period               = rf.check("period",         Value(40), "Looking for controller period").asInt();
+    double RunDuration       = rf.check("duration",       Value(5),  "Looking for Running Duration ").asDouble();
+    int FT_feedbackType      = rf.check("FT_feedback",    Value(0),  "Looking for Running Duration ").asInt();
+    int VelocityCmdType      = rf.check("VelocityCmdType",Value(0),  "Looking for keyboard input ").asInt();
 
+    // Load Desired Initial Velocity for Velocity Commands Option 0/1
     Eigen::Vector3d InitVelocity;
     InitVelocity(0) = rf.check("VelocityX", Value(0.10), "Looking for forward velocity ").asDouble();
-    InitVelocity(1) = rf.check("VelocityY", Value(0), "Looking for lateral velocity ").asDouble();
-    InitVelocity(2) = rf.check("OmegaZ", Value(0), "Looking for rotation velocity ").asDouble();
+    InitVelocity(1) = rf.check("VelocityY", Value(0),    "Looking for lateral velocity ").asDouble();
+    InitVelocity(2) = rf.check("OmegaZ",    Value(0),    "Looking for rotation velocity").asDouble();
+
+    // Load Desired Initial Velocity for Velocity Commands Option 2 (DS)
+    Eigen::Vector3d Attractor;
+    int DS_type  = rf.check("DS_type",    Value(0),   "DS-Type").asInt();
+    Attractor(0) = rf.check("AttractorX", Value(0.0), "Attractor x position").asDouble();
+    Attractor(1) = rf.check("AttractorY", Value(0.0), "Attractor y position").asDouble();
+    Attractor(2) = rf.check("AttractorZ", Value(0.0), "Attractor z position").asDouble();    
 
     // convert the period from millisecond to second
     double m_period = 0.001 * (double) period;
-
     std::cout << " the duration is : \n"  << RunDuration << std::endl;
 
     // creation of the wbi robot object
@@ -196,6 +203,12 @@ int main(int argc, char **argv) //(int argc, char *argv[])
     // Instantiate the Desired CoM Velocity Reader 
     DesVelocityReader myDesiredCoM( m_moduleName, m_robotName, VelocityCmdType, InitVelocity); 
     myDesiredCoM.initReader();
+    myDesiredCoM.setAttractor(Attractor);        
+
+    if (VelocityCmdType == 2)
+        myDesiredCoM.setAttractor(Attractor);        
+
+cout << "heteddd" << endl;
     // ==========================================================================
 
     // Variable for Desired CoM Velocity Given my port
@@ -204,10 +217,6 @@ int main(int argc, char **argv) //(int argc, char *argv[])
     des_com_vel.setZero();
 
     while(!(done && finalConf) && !myCtrlThread.StopCtrl && !isnan(des_com_vel(0))){
-        
-        // des_com_vel(0) = myDesiredCoMThread.des_com_vel_(0);
-        // des_com_vel(1) = myDesiredCoMThread.des_com_vel_(1);
-        // des_com_vel(2) = myDesiredCoMThread.des_com_vel_(2);
 
         // Read the current desired CoM
         myDesiredCoM.updateDesComVel();
@@ -221,7 +230,6 @@ int main(int argc, char **argv) //(int argc, char *argv[])
         myCtrlThread.Des_RelativeVelocity(0) = des_com_vel(0);
         myCtrlThread.Des_RelativeVelocity(1) = des_com_vel(1);
         myCtrlThread.Des_RelativeVelocity(2) = des_com_vel(2);            
-
 
         // Stopping conditions
         if (!done &&((Time::now()-startTime)> RunDuration)){

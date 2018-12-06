@@ -12,6 +12,8 @@
 #include <Eigen/Dense>
 #include <Eigen/Core>
 #include <Eigen/SVD>
+#include <unsupported/Eigen/MatrixFunctions>
+
 
 using namespace std;
 using namespace yarp::os;
@@ -25,6 +27,7 @@ class DesVelocityReader
         string               moduleName_;
         string               robotName_;        
         int                  VelocityCmdType_;
+        double               max_v, max_w;
 
         // Creating port for keyboard input cmd
         Bottle              *keyboardValues;
@@ -37,15 +40,19 @@ class DesVelocityReader
         Bottle              *RootlinkPose_values;
         BufferedPort<Bottle> RootlinkPose_port_In;
         Eigen::VectorXd      Rootlink_measurements;
+        Eigen::Vector3d      CoM_pos;
+        Eigen::Vector3d      CoM_orient_rpy;
+        Eigen::Matrix3d      CoM_orient_rot;
 
-        // For DS input from ROS-YARP translator
-        //....
-  
+
+        // For DS input
+        Eigen::Vector3d      attractor_;    // initial velocity set by user
+
 
     public:
     
         
-        Eigen::VectorXd des_com_vel_;  // factor of velocity increase        
+        Eigen::VectorXd des_com_vel_;
         
         DesVelocityReader(string moduleName, string robotName, int VelocityCmdType, Eigen::Vector3d  init_vel);
 
@@ -56,5 +63,11 @@ class DesVelocityReader
         void updateCoM();    
 
         void updateDesComVel();    
+
+        void setAttractor(Eigen::Vector3d attractor);
+
+        Eigen::Vector3d linearDS(double kappa);
+
+        double computeAngularVelocity(Eigen::Vector3d x_dot);
 
 };
