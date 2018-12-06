@@ -140,12 +140,20 @@ double DesVelocityReader::computeAngularVelocity(Eigen::Vector3d x_dot){
 
     Eigen::Vector3d ds_dir    = x_dot.normalized();
     Eigen::Vector3d robot_dir(CoM_orient_rot(0,0),CoM_orient_rot(1,0),CoM_orient_rot(2,0));
-    double rot_angle  = acos(ds_dir.transpose()*robot_dir);
+    robot_dir = robot_dir.normalized();
+//    double rot_angle  = acos(dot_dir/(ds_dir.norm()*robot_dir.norm()));
+    double rot_angle  = atan2(ds_dir(1),ds_dir(0)) - atan2(robot_dir(1),robot_dir(0));
+    std::cout << "Desired Rotation Angle: " << rot_angle << std::endl;
+
+    if (rot_angle > M_PI){
+        std::cout << "Desired Rotation Angle > PI... changing direction" << std::endl;
+        rot_angle = rot_angle - 2*M_PI;
+    }
 
     // Creating rotation matrix from current CoM to desired CoM
     Eigen::Matrix3d Rot_z;
     Rot_z << cos(rot_angle), -sin(rot_angle), 0,
-            sin(rot_angle),  cos(rot_angle), 0,
+             sin(rot_angle),  cos(rot_angle), 0,
                           0,               0, 1;
 
     // Compute angular velocity that rotates current CoM to desired CoM
@@ -228,7 +236,7 @@ void DesVelocityReader::updateDesComVel(){
             std::cout << "Desired (CoM) Velocity DS v_x: " << v_des(0) << " v_y:" << v_des(1) << " w_z:" << w_z << std::endl;
 
             // Slow down angular velocity
-            w_z   = kappa*computeAngularVelocity(v_des);
+            w_z   = kappa*w_z;
 
             // Truncate values with maximum velocity limits
             if(v_des(0) > max_v)
