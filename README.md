@@ -121,8 +121,9 @@ VelocityCmdType		2
     - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/attractor.gif">: Attractor (target)
     - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/kappa.gif">: DS gain     
 
-    The angular velocity <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/omega_z.gif"> is defined with the following equation: <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/omega_eq.gif">, where:
-    - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/R.gif">:  Current Rotation matrix of the robot's CoM in world reference frame
+    The angular velocity <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/omega_z.gif"> is defined with the following equation: <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/omega_eq.gif">, where:  
+    
+   - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/R.gif">:  Current Rotation matrix of the robot's CoM in world reference frame
     - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/R_d.gif">: Desired Rotation matrix of the robot's CoM in world reference frame, computed by aligning R with the direction of motion given by the DS <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/ds_dir.gif">
     - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/omega_skew.gif">: The skew-symmetric matrix representing the angular velocity vector <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/omega.gif">
    
