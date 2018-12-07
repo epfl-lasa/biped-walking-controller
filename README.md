@@ -104,7 +104,9 @@ VelocityCmdType		2
  ```
    variation 0.005
  ```
-
+ - Arrow keys: Define linear velocity increments
+ - 'a' and 'd' keys: Define angular velocity increment
+ 
  3. Desired Velocity will be generated via a simple linear DS: ``VelocityCmdType		2``   
  The implemented DS is of the form <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/linear_DS.gif"> whose parameters can be defined as follows:
  ```
@@ -120,6 +122,10 @@ VelocityCmdType		2
    - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/kappa.gif">: DS gain 
   
    For this test, the ```./KeyboardCommandsReader``` is not necessary.
+
+   The angular velocity w_z is defined with the following equation:
+   - R :  Current Rotation matrix of the robot's CoM in world reference frame
+   - R_d: Desired Rotation matrix of the robot's CoM in world reference frame, computed by aligning R with the direction of motion given by the DS x_dot_norm
 
    ***NOTE: To test the ROS interface that generates CoM velocity based on non-linear DS LfD, follow the instructions in [icub-ds-walking](https://github.com/epfl-lasa/icub-ds-walking.git)***
 
