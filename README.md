@@ -115,8 +115,8 @@ VelocityCmdType		2
     AttractorX 2.00
     AttractorY -1.00
     AttractorZ 0.541591
-   ```
-    where:
+  ```  
+   where:
     - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/CoM.gif">: CoM position
     - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/attractor.gif">: Attractor (target)
     - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/kappa.gif">: DS gain     
