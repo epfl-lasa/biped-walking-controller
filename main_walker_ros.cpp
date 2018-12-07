@@ -48,7 +48,7 @@
 #include "OptimalFilters.h"
 
 #include "CpBalWlkCtrlThread.h"
-#include "DesVelocityCommand.h"
+#include "DesVelocityCommandROS.h"
 
 #include <qpOASES.hpp>
 
@@ -144,15 +144,10 @@ int main(int argc, char **argv) //(int argc, char *argv[])
     int period               = rf.check("period",         Value(40), "Looking for controller period").asInt();
     double RunDuration       = rf.check("duration",       Value(5),  "Looking for Running Duration ").asDouble();
     int FT_feedbackType      = rf.check("FT_feedback",    Value(0),  "Looking for Running Duration ").asInt();
-    int VelocityCmdType      = rf.check("VelocityCmdType",Value(0),  "Looking for keyboard input ").asInt();
+    int DSType               = rf.check("DSType",         Value(0),  "Looking for DStype ").asInt();
 
-    // Load Desired Initial Velocity for Velocity Commands Option 0/1
-    Eigen::Vector3d InitVelocity;
-    InitVelocity(0) = rf.check("VelocityX", Value(0.10), "Looking for forward velocity ").asDouble();
-    InitVelocity(1) = rf.check("VelocityY", Value(0),    "Looking for lateral velocity ").asDouble();
-    InitVelocity(2) = rf.check("OmegaZ",    Value(0),    "Looking for rotation velocity").asDouble();
 
-    // Load Desired Initial Velocity for Velocity Commands Option 2 (DS)
+    // Load Parameters for DS_type=0 (Linear DS)
     Eigen::Vector3d Attractor;
     double kappa  = rf.check("kappa",     Value(0.005),   "kappa").asDouble();
     Attractor(0)  = rf.check("AttractorX", Value(0.0), "Attractor x position").asDouble();
@@ -192,7 +187,8 @@ int main(int argc, char **argv) //(int argc, char *argv[])
     int n_Samp1, n_Samp_init;
         n_Samp1 = (int)(round(myCtrlThread.Parameters->DurationSteps[0]/myCtrlThread.Parameters->SamplingTime));
 
-    // Set the Initial Desired CoM velocity
+    // Set the Initial Desired CoM velocity        
+     Eigen::Vector3d InitVelocity; InitVelocity.setZero();
     myCtrlThread.Des_RelativeVelocity = InitVelocity;
     bool done=false;
     bool finalConf = false;
@@ -206,15 +202,14 @@ int main(int argc, char **argv) //(int argc, char *argv[])
     // =======================================================
     // Instantiate the Desired CoM Velocity Command Generator 
     // =======================================================
-    DesVelocityCommand myDesiredCoM( m_moduleName, m_robotName, VelocityCmdType, InitVelocity); 
+    DesVelocityCommandROS myDesiredCoM( m_moduleName, m_robotName, DSType); 
     myDesiredCoM.initReader();
     myDesiredCoM.setAttractor(Attractor);        
 
-    if (VelocityCmdType == 2){
+    if (DSType == 0){
         myDesiredCoM.setAttractor(Attractor);        
         myDesiredCoM.setkappa(kappa);
     }
-
 
     // =======================================================
     //                  MAIN CONTROL LOOP
@@ -225,7 +220,7 @@ int main(int argc, char **argv) //(int argc, char *argv[])
     des_com_vel.setZero();
     while(!(done && finalConf) && !myCtrlThread.StopCtrl && !isnan(des_com_vel(0))){
 
-        // Read the current desired CoM Velocity
+        // Read the current desired CoM
         myDesiredCoM.updateDesComVel();
 
         // Get current desired velocity command

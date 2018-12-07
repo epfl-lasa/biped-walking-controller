@@ -196,22 +196,21 @@ bool CpBalWlkCtrlThread::threadInit()
 
 
 
-    // *******************************************************************************************
-    // Initializing the kinematic model to get the frames in world reference frame -NADIA
-    // *******************************************************************************************
-    bool linkFound = true;
-    linkFound = robot_model.getFrameList().idToIndex("l_sole", leftFootLinkID);
-    linkFound = linkFound && robot_model.getFrameList().idToIndex("r_sole", rightFootLinkID);
-    linkFound = linkFound && robot_model.getFrameList().idToIndex("l_hand", leftHandLinkID);
-    linkFound = linkFound && robot_model.getFrameList().idToIndex("r_hand", rightHandLinkID);
-    linkFound = linkFound && robot_model.getFrameList().idToIndex("root_link", rootLinkID); 
+    // ***************************************************************************************************
+    // Initializing the kinematic model to get the frames in world reference frame -NADIA (Not necessary!)
+    // **************************************************************************************************
+    // bool linkFound = true;
+    // linkFound = robot_model.getFrameList().idToIndex("l_sole", leftFootLinkID);
+    // linkFound = linkFound && robot_model.getFrameList().idToIndex("r_sole", rightFootLinkID);
+    // linkFound = linkFound && robot_model.getFrameList().idToIndex("l_hand", leftHandLinkID);
+    // linkFound = linkFound && robot_model.getFrameList().idToIndex("r_hand", rightHandLinkID);
+    // linkFound = linkFound && robot_model.getFrameList().idToIndex("root_link", rootLinkID); 
 
-    if (!linkFound){
-        printf("Could not find frames!\n");
-        return 0;
-    }else{
-        printf("********************** Found ALL FRAMES THAT I WANT!!! **********************\n");
-    }
+    // if (!linkFound){
+    //     printf("Could not find frames!\n");
+    //     return 0;
+    // }
+
     jts_position_n.resize(robotDof);           // q
     jts_velocity_n.resize(robotDof);           // dq
     jts_acceleration_n.resize(robotDof);       // ddq
@@ -576,7 +575,6 @@ void CpBalWlkCtrlThread::run()
 
     // -------------------------------------------------------------------
     double t_run = Time::now();
-    printf("Desired Relative Velocity  vx:%4.6f vy:%4.6f  wz:%4.6f \n", Des_RelativeVelocity(0), Des_RelativeVelocity(1), Des_RelativeVelocity(2));
 
     // *****************************************************************************************
     //  Estimation of the robot state with respect to the world frame -- NADIA (Ended up being completely unncessary)

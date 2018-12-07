@@ -236,8 +236,8 @@ void DesVelocityCommand::updateDesComVel(){
                     // Fix COM velocity using value from .ini config file
                     // # Initial velocity Vx [m/s], Vy [m/s],  Wz [rad/s],
                     des_com_vel_(0) = init_vel_(0);
-                    des_com_vel_(1) = init_vel_(0);
-                    des_com_vel_(2) = init_vel_(0);
+                    des_com_vel_(1) = init_vel_(1);
+                    des_com_vel_(2) = init_vel_(2);
                 }
         }
 
