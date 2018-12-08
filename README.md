@@ -109,24 +109,26 @@ VelocityCmdType		2
  
  3. Desired Velocity will be generated via a simple linear DS: ``VelocityCmdType		2``   
  The implemented DS is of the form <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/linear_DS.gif"> whose parameters can be defined as follows:
- ```
-   # Desired Target with linear DS x [m], y [m], z [m] 
-   kappa      0.2
-   AttractorX 2.00
-   AttractorY -1.00
-   AttractorZ 0.541591
   ```
-   where:
+    # Desired Target with linear DS x [m], y [m], z [m] 
+    kappa      0.2
+    AttractorX 2.00
+    AttractorY -1.00
+    AttractorZ 0.541591
+  ```  
+   where:  
    - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/CoM.gif">: CoM position
    - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/attractor.gif">: Attractor (target)
-   - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/kappa.gif">: DS gain 
-  
-   For this test, the ```./KeyboardCommandsReader``` is not necessary.
+   - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/kappa.gif">: DS gain     
 
-   The angular velocity <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/omega_z.gif"> is defined with the following equation: <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/omega_eq.gif">
-   - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/R.gif">:  Current Rotation matrix of the robot's CoM in world reference frame
-   - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/R_d.gif">: Desired Rotation matrix of the robot's CoM in world reference frame, computed by aligning R with the direction of motion given by the DS x_dot_norm
-   - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/omega_skew.gif">: The skew-symmetric matrix representing the angular velocity vector 
+   The angular velocity <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/omega_z.gif"> is defined with the following equation: <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/omega_eq.gif">, where:  
+    
+   - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/R.gif">:  Current Rotation matrix of the robot's CoM in world reference frame  
+   - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/R_d.gif">: Desired Rotation matrix of the robot's CoM in world reference frame, computed by aligning R with the direction of motion given by the DS <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/ds_dir.gif">  
+   - <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/omega_skew.gif">: The skew-symmetric matrix representing the angular velocity vector <img src="https://github.com/epfl-lasa/biped-walking-controller/blob/nadia-DS/img/omega.gif">  
+   
+   For this test, the ```./KeyboardCommandsReader``` is not necessary.  
+   
    ***NOTE: To test the ROS interface that generates CoM velocity based on non-linear DS LfD, follow the instructions in [icub-ds-walking](https://github.com/epfl-lasa/icub-ds-walking.git)***
 
 
