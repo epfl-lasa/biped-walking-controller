@@ -204,6 +204,10 @@ void DesVelocityCommandROS::updateDesComVel(){
             // Slow down angular velocity
             w_z   = kappa_*w_z;
 
+            // v_des(0) = 0;
+            // v_des(1) = 0;
+            // w_z      = 0;
+
             // Truncate values with maximum velocity limits
             if(v_des(0) > max_v)
                 des_com_vel_(0) = max_v;
