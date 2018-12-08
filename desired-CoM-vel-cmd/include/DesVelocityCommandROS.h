@@ -47,7 +47,18 @@ class DesVelocityCommandROS
         BufferedPort<yarp::sig::Vector> CoMPose_port_Out;
         yarp::sig::Vector               CoMPoses;
 
+
+        // Creating port for reading DS desired velocity from ROS
+        Bottle              *DSVelocity_values;
+        BufferedPort<Bottle> DSVelocity_port_In;
+
+
+        // Creating port for reading attractor from ROS
+        Bottle              *DSAttractor_values;
+        BufferedPort<Bottle> DSAttractor_port_In;
+
         // For linear DS input
+        Eigen::Vector3d      DS_desired_velocity_;
         Eigen::Vector3d      attractor_;   
 
 
@@ -72,7 +83,7 @@ class DesVelocityCommandROS
 
         Eigen::Vector3d linearDS();
 
-        Eigen::Vector3d nonlinearDS();
+        Eigen::Vector3d DSfromROS();
 
         double computeAngularVelocity(Eigen::Vector3d x_dot);
 

@@ -226,7 +226,7 @@ int main(int argc, char **argv) //(int argc, char *argv[])
         // Get current desired velocity command
         des_com_vel = myDesiredCoM.des_com_vel_;        
 
-        printf("Sent Desired Velocity vx:%4.6f vy:%4.6f  wz:%4.6f \n", des_com_vel(0), des_com_vel(1), des_com_vel(2));
+        // printf("Sent Desired Velocity vx:%4.6f vy:%4.6f  wz:%4.6f \n", des_com_vel(0), des_com_vel(1), des_com_vel(2));
 
         // Send to controller thread 
         myCtrlThread.Des_RelativeVelocity(0) = des_com_vel(0);

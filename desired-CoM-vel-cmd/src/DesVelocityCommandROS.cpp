@@ -21,7 +21,7 @@ bool DesVelocityCommandROS::initReader(){
 
     RootlinkPose_port_In.open("/RootlinkPose_In:i");
     if(!Network::connect(RootlinkPose_portName.c_str(), RootlinkPose_port_In.getName().c_str())){
-        printf(" Unable to connect to the KeyboardCmdsReaderModule port");
+        printf(" Unable to connect to Root-link pose reader port");
         return false;
     }
 
@@ -37,10 +37,41 @@ bool DesVelocityCommandROS::initReader(){
     // ======  Update CoM by reading it from Gazebo->transforming it->Sending to ROS ====== //
     updateCoM();
 
+
+    if (DSType_ == 1){
+        // ====== Opening the port for desired DS Velocity in World ====== //
+        std::string DSVelocity_portName="/";
+        DSVelocity_portName += robotName_;
+        DSVelocity_portName += "/DesiredCoMVelocity:o";
+
+
+        DSVelocity_port_In.open("/DesiredCoMVelocity_In:i");
+        if(!Network::connect(DSVelocity_portName.c_str(), DSVelocity_port_In.getName().c_str())){
+            printf(" Unable to connect to DS desired velocity reader port");
+            return false;
+        }
+
+
+        // ====== Opening the port for desired DS Attractor in World ====== //
+        std::string DSAttractor_portName="/";
+        DSAttractor_portName += robotName_;
+        DSAttractor_portName += "/DesiredCoMAttractor:o";
+
+
+        DSAttractor_port_In.open("/DesiredCoMAttractor_In:i");
+        if(!Network::connect(DSAttractor_portName.c_str(), DSAttractor_port_In.getName().c_str())){
+            printf(" Unable to connect to DS desired velocity reader port");
+            return false;
+        }
+
+    }
+
+
     // Set maximum velocity values
     max_v = 0.2;
     max_w = 0.2;
     kappa_ = 0.1;
+    attractor_.setZero();
 
     return true; 
 }
@@ -52,6 +83,11 @@ void DesVelocityCommandROS::stop(){
     RootlinkPose_port_In.close();
     CoMPose_port_Out.close();
 
+    if (DSType_ == 1){
+        DSVelocity_port_In.close();
+        DSAttractor_port_In.close();
+    }
+
 }
 
 
@@ -59,9 +95,8 @@ void DesVelocityCommandROS::updateCoM(){
 
     RootlinkPose_values = RootlinkPose_port_In.read(); 
     Rootlink_measurements.resize(RootlinkPose_values->size());    
-    for (int i= 0;i < RootlinkPose_values->size(); i++){
+    for (int i= 0;i < RootlinkPose_values->size(); i++)
         Rootlink_measurements(i) = RootlinkPose_values->get(i).asDouble();            
-    }
 
     // Fill in local CoM Position variable
     for (int i=0; i < CoM_pos.rows(); i++)
@@ -72,7 +107,7 @@ void DesVelocityCommandROS::updateCoM(){
         CoM_orient_rpy(i) = Rootlink_measurements(CoM_pos.rows() + i);
 
     std::cout << "CoM position    x: " << CoM_pos(0) << " y:" << CoM_pos(1) << " z:" << CoM_pos(2) << std::endl;
-    std::cout << "CoM orientation roll: " << CoM_orient_rpy(0) << " pitch:" << CoM_orient_rpy(1) << " yaw:" << CoM_orient_rpy(2) <<  std::endl;
+//    std::cout << "CoM orientation roll: " << CoM_orient_rpy(0) << " pitch:" << CoM_orient_rpy(1) << " yaw:" << CoM_orient_rpy(2) <<  std::endl;
 
     // Create Rotation matrix from RPY angles
     Eigen::Matrix3d Rot_z, CoM_orient_robot;
@@ -115,37 +150,37 @@ void DesVelocityCommandROS::updateCoM(){
 
 void DesVelocityCommandROS::setAttractor(Eigen::Vector3d attractor){
     attractor_ = attractor;
-    std::cout << "Desired Root-Link (CoM) Target x: " << attractor_(0) << " y:" << attractor_(1) << " z:" << attractor_(2) << std::endl;
+//    std::cout << "Desired Root-Link (CoM) Target x: " << attractor_(0) << " y:" << attractor_(1) << " z:" << attractor_(2) << std::endl;
 }
 
 
 void DesVelocityCommandROS::setkappa(double kappa){
     kappa_ = kappa;
+    std::cout << "Desired kappa: " << kappa_ << std::endl;
 }
 
 Eigen::Vector3d DesVelocityCommandROS::linearDS(){
     Eigen::Vector3d x_dot;
-    Eigen::Vector3d x_com; // Change for CoM_pos...
-
-    for(int i=0; i<x_com.size(); i++)
-        x_com(i) =  Rootlink_measurements(i);
 
     // x_dot = -k(x-x_att)
-    std::cout << "Desired kappa: " << kappa_ << std::endl;
-
-    x_dot = -kappa_*( x_com - attractor_);
+    x_dot = -kappa_*( CoM_pos - attractor_);
     return x_dot;
 }
 
 
-Eigen::Vector3d DesVelocityCommandROS::nonlinearDS(){
+Eigen::Vector3d DesVelocityCommandROS::DSfromROS(){
+
+    // Update attractor
+    DSAttractor_values = DSAttractor_port_In.read();
+    Eigen::Vector3d updated_attractor (DSAttractor_values->get(0).asDouble(), DSAttractor_values->get(1).asDouble(), CoM_pos(2));
+    setAttractor(updated_attractor);
+
+    // Update desired Velocity from DS
+    DSVelocity_values = DSVelocity_port_In.read();
     Eigen::Vector3d x_dot;
-    Eigen::Vector3d x_com;
+    for (int i= 0; i < 3; i++)
+        x_dot(i) = DSVelocity_values->get(i).asDouble();
 
-    for(int i=0; i<x_com.size(); i++)
-        x_com(i) =  Rootlink_measurements(i);
-
-    
     return x_dot;
 }
 
@@ -156,11 +191,6 @@ double DesVelocityCommandROS::computeAngularVelocity(Eigen::Vector3d x_dot){
     robot_dir = robot_dir.normalized();
     double rot_angle  = atan2(ds_dir(1),ds_dir(0)) - atan2(robot_dir(1),robot_dir(0));
     std::cout << "Desired Rotation Angle: " << rot_angle << std::endl;
-
-    // if (rot_angle > M_PI){
-    //     std::cout << "Desired Rotation Angle > PI... changing direction" << std::endl;
-    //     rot_angle = rot_angle - 2*M_PI;
-    // }
 
     // Creating rotation matrix from current CoM to desired CoM
     Eigen::Matrix3d Rot_z;
@@ -193,22 +223,29 @@ void DesVelocityCommandROS::updateDesComVel(){
             des_com_vel_(0) = NAN;
         }else{
 
-            if (DSType_ == 0) 
-                v_des = linearDS();    
-            else if (DSType_ == 1)
-                v_des = nonlinearDS();
+            if (DSType_ == 0) {
+                v_des = linearDS();
+                w_z   = computeAngularVelocity(v_des);
+                /* Slow down angular velocity */
+                w_z   = kappa_*w_z;
+            }
+            else if (DSType_ == 1){
+                v_des = DSfromROS();
+                w_z   = computeAngularVelocity(v_des);
 
-            w_z   = computeAngularVelocity(v_des);
+                /* Slow down linear velocity if angular velocity is too high */
+                if (w_z > 0.25 || w_z < -0.25){
+                  v_des(0) = 0;
+                  v_des(1) = 0;
+                  w_z      = 0.25*w_z;
+                }
+                else
+                  w_z      = 0.1*w_z;
+
+            }
             std::cout << "Desired (CoM) Velocity DS v_x: " << v_des(0) << " v_y:" << v_des(1) << " w_z:" << w_z << std::endl;
 
-            // Slow down angular velocity
-            w_z   = kappa_*w_z;
-
-            // v_des(0) = 0;
-            // v_des(1) = 0;
-            // w_z      = 0;
-
-            // Truncate values with maximum velocity limits
+            /* Truncate values with maximum velocity limits */
             if(v_des(0) > max_v)
                 des_com_vel_(0) = max_v;
             else if (v_des(0) < -max_v)
