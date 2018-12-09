@@ -68,9 +68,9 @@ bool DesVelocityCommandROS::initReader(){
 
 
     // Set maximum velocity values
-    max_v = 0.15;
+    max_v = 0.1;
     max_w = 0.1;
-    kappa_ = 0.15;
+    kappa_ = 0.1;
     dist_thres_ = 0.25;
     attractor_.setZero();
 
@@ -250,15 +250,20 @@ void DesVelocityCommandROS::updateDesComVel(){
             }
 
             /* Stop linear velocity if desired rotation angle is too high */
-            if (abs(rot_angle_)> M_PI/6){
+            if (abs(rot_angle_)> M_PI/20){
               v_des(0) = 0;
               v_des(1) = 0;
-              w_z  = 2*kappa_*w_z;
+              w_z  = w_z;
             }
             else{
                 /* Scale angular velocity to avoid falling */
                 w_z = kappa_*w_z;
+                w_z = 0.5*w_z;
+
+                // Hacky-hack.. if angle too low dont rotate
+//                w_z = 0.0;
             }
+//            w_z = 0.0;
 
             /* Send desired CoM velocity to walking controller */
             des_com_vel_(0) = v_des(0);
