@@ -28,6 +28,7 @@ class DesVelocityCommandROS
         string               robotName_;        
         int                  DSType_;
         double               max_v, max_w, kappa_;
+        double               rot_angle_, dist_thres_;
 
         // Creating port for keyboard input cmd
         Bottle              *keyboardValues;
