@@ -26,9 +26,9 @@ class DesVelocityCommandROS
 
         string               moduleName_;
         string               robotName_;        
-        int                  DSType_;
+        int                  DSType_, counter_;
         double               max_v, max_w, kappa_;
-        double               rot_angle_, dist_thres_;
+        double               rot_angle_, dist_thres_, des_omega_;
 
         // Creating port for keyboard input cmd
         Bottle              *keyboardValues;
@@ -38,9 +38,7 @@ class DesVelocityCommandROS
         // Creating port for reading Root-link in world frame pose
         Bottle              *RootlinkPose_values;
         BufferedPort<Bottle> RootlinkPose_port_In;
-        Eigen::VectorXd      Rootlink_measurements;
-        Eigen::Vector3d      CoM_pos;
-        Eigen::Vector3d      CoM_orient_rpy;
+        Eigen::VectorXd      Rootlink_measurements;        
         Eigen::Matrix3d      CoM_orient_rot;
         Eigen::Quaterniond   CoM_orient_quat;
 
@@ -64,9 +62,10 @@ class DesVelocityCommandROS
 
 
     public:
-    
-        
-        Eigen::VectorXd des_com_vel_;
+
+        Eigen::Vector3d      CoM_pos;
+        Eigen::Vector3d      CoM_orient_rpy;
+        Eigen::VectorXd      des_com_vel_;
         
         DesVelocityCommandROS(string moduleName, string robotName, int DSType);
 

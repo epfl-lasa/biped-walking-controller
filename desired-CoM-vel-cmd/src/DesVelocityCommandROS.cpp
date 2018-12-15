@@ -71,8 +71,9 @@ bool DesVelocityCommandROS::initReader(){
     max_v = 0.1;
     max_w = 0.1;
     kappa_ = 0.1;
-    dist_thres_ = 0.25;
+    dist_thres_ = 0.15;
     attractor_.setZero();
+    counter_ = 0;
 
     return true; 
 }
@@ -151,13 +152,11 @@ void DesVelocityCommandROS::updateCoM(){
 
 void DesVelocityCommandROS::setAttractor(Eigen::Vector3d attractor){
     attractor_ = attractor;
-//    std::cout << "Desired CoM Target x: " << attractor_(0) << " y:" << attractor_(1) << " z:" << attractor_(2) << std::endl;
 }
 
 
 void DesVelocityCommandROS::setkappa(double kappa){
     kappa_ = kappa;
-//    std::cout << "Desired kappa: " << kappa_ << std::endl;
 }
 
 Eigen::Vector3d DesVelocityCommandROS::linearDS(){
@@ -178,11 +177,16 @@ Eigen::Vector3d DesVelocityCommandROS::DSfromROS(){
 
     // Update desired Velocity from DS
     DSVelocity_values = DSVelocity_port_In.read();
-    Eigen::Vector3d x_dot;
+    Eigen::Vector3d x_dot, x_dot_rot;
     for (int i= 0; i < 3; i++)
         x_dot(i) = DSVelocity_values->get(i).asDouble();
 
-    return x_dot;
+    // Rotate velocity vector to CoM Reference frame
+//    std::cout << "x_dot before rotation v_x:" << x_dot(0) << " v_y:" << x_dot(1) << std::endl;
+    x_dot_rot =  CoM_orient_rot.inverse() * x_dot;
+//    std::cout << "x_dot after rotation v_x:" << x_dot_rot(0) << " v_y:" << x_dot_rot(1) << std::endl;
+
+    return x_dot_rot;
 }
 
 double DesVelocityCommandROS::computeAngularVelocity(Eigen::Vector3d x_dot){
@@ -197,16 +201,24 @@ double DesVelocityCommandROS::computeAngularVelocity(Eigen::Vector3d x_dot){
     Eigen::Matrix3d Rot_z;
     Rot_z << cos(rot_angle_), -sin(rot_angle_), 0,
              sin(rot_angle_),  cos(rot_angle_), 0,
-                          0,               0, 1;
+                          0,               0,   1;
 
     // Compute angular velocity that rotates current CoM to desired CoM
     Eigen::Matrix3d CoM_orient_des, Rot_diff, Omega_x;
     CoM_orient_des = CoM_orient_rot*Rot_z;
     Rot_diff = CoM_orient_des * CoM_orient_rot.transpose();
-    Omega_x = Rot_diff.log();
 
-    Eigen::Vector3d ang_vel (Omega_x(2,1),Omega_x(0,2),Omega_x(1,0));
-    return ang_vel(2);
+    /* log geometric vector */
+    Eigen::Matrix3d Omega;
+    double theta, n_scalar;
+    theta      = acos((Rot_diff.trace()-1)/2);
+    n_scalar   = 1/(2*sin(theta));
+    Omega(0)   =  Rot_diff(2,1) - Rot_diff(1,2);
+    Omega(1)   =  Rot_diff(0,2) - Rot_diff(2,0);
+    Omega(2)   =  Rot_diff(1,0) - Rot_diff(0,1);
+    Omega  = theta * n_scalar * Omega;
+
+    return Omega(2);
 }
 
 void DesVelocityCommandROS::updateDesComVel(){
@@ -231,8 +243,15 @@ void DesVelocityCommandROS::updateDesComVel(){
                 w_z   = kappa_*w_z;
             }
             else if (DSType_ == 1){
-                v_des = DSfromROS();
-                w_z   = computeAngularVelocity(v_des);
+                v_des        = DSfromROS();
+                des_omega_   = computeAngularVelocity(v_des);
+                if (abs(rot_angle_)> M_PI/10){ // If desired rotation angle >30deg slow down linear velocity
+                    v_des(0) = 0.0*v_des(0);
+                    v_des(1) = 0.0*v_des(1);
+                    w_z = 0.75*des_omega_;
+                }
+                else
+                    w_z = kappa_*des_omega_;
             }
 
             /* Limit linear and angular velocities */
@@ -240,7 +259,7 @@ void DesVelocityCommandROS::updateDesComVel(){
             if (desired_speed > max_v)
                 v_des = v_des / v_des.norm() * max_v;
 
-            std::cout << "Desired Speed: " << desired_speed << " Truncated speed: " << v_des.norm() <<  std::endl;
+            std::cout << "Desired Speed: " << desired_speed << " Truncated speed: " << v_des.norm() << " Desired omega:" << w_z <<  std::endl;
 
             if (abs(w_z) > max_w){
                 if (w_z < 0)
@@ -249,26 +268,15 @@ void DesVelocityCommandROS::updateDesComVel(){
                     w_z = max_w;
             }
 
-            /* Stop linear velocity if desired rotation angle is too high */
-            if (abs(rot_angle_)> M_PI/20){
-              v_des(0) = 0;
-              v_des(1) = 0;
-              w_z  = w_z;
-            }
-            else{
-                /* Scale angular velocity to avoid falling */
-                w_z = kappa_*w_z;
-                w_z = 0.5*w_z;
-
-                // Hacky-hack.. if angle too low dont rotate
-//                w_z = 0.0;
-            }
-//            w_z = 0.0;
+            /* If the robot is close to the target remove angular velocity */
+            if (dist_targ < dist_thres_*3)
+                w_z = 0.0;
 
             /* Send desired CoM velocity to walking controller */
             des_com_vel_(0) = v_des(0);
             des_com_vel_(1) = v_des(1);
             des_com_vel_(2) = w_z;
+
             std::cout << "Desired (CoM) Velocity DS v_x: " << des_com_vel_(0) << " v_y:" << des_com_vel_(1) << " w_z:" << des_com_vel_(2)  << std::endl;
         }
 

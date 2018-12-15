@@ -215,18 +215,30 @@ int main(int argc, char **argv) //(int argc, char *argv[])
     //                  MAIN CONTROL LOOP
     // =======================================================
     // Variable for Desired CoM Velocity Given my port
-    Eigen::VectorXd des_com_vel;
-    des_com_vel.resize(3);
-    des_com_vel.setZero();
+    Eigen::VectorXd des_com_vel, CoM_pos, CoM_rpy;
+    des_com_vel.resize(3); des_com_vel.setZero();
+    CoM_pos.resize(3); CoM_pos.setZero();
+    CoM_rpy.resize(3); CoM_rpy.setZero();
+
+    // Open file
+//    std::ofstream measurements_file;
+//    measurements_file.open ("simulation_measurements.txt");
+
     while(!(done && finalConf) && !myCtrlThread.StopCtrl && !isnan(des_com_vel(0))){
 
         // Read the current desired CoM
         myDesiredCoM.updateDesComVel();
 
+
+        // Get current CoM pose
+        CoM_pos     = myDesiredCoM.CoM_pos;
+        CoM_rpy     = myDesiredCoM.CoM_orient_rpy;
+
         // Get current desired velocity command
         des_com_vel = myDesiredCoM.des_com_vel_;        
 
-        // printf("Sent Desired Velocity vx:%4.6f vy:%4.6f  wz:%4.6f \n", des_com_vel(0), des_com_vel(1), des_com_vel(2));
+        // Write data to file
+//        measurements_file << CoM_pos(0) << " " << CoM_pos(1) << " " << CoM_pos(2) << " " << CoM_rpy(0) << " " << CoM_rpy(1) << " " << CoM_rpy(2) << " " << des_com_vel(0) << " " << des_com_vel(1) << " " << des_com_vel(2) <<"\n";
 
         // Send to controller thread 
         myCtrlThread.Des_RelativeVelocity(0) = des_com_vel(0);
@@ -257,6 +269,9 @@ int main(int argc, char **argv) //(int argc, char *argv[])
         }    
 
     }
+
+    // Close file
+//    measurements_file.close();
 
     // Set to Zero the Desired CoM velocity before stopping
     myCtrlThread.Des_RelativeVelocity(0) = 0.00;  
