@@ -1,14 +1,14 @@
-#include "DesVelocityCommandROS.h"
+#include "DesVelocityCommand_lpvDS.h"
 
-DesVelocityCommandROS::DesVelocityCommandROS(string moduleName, string robotName, int DSType)
+DesVelocityCommand_lpvDS::DesVelocityCommand_lpvDS(string moduleName, string robotName, int DSType, string path_to_models, string lpvDS_model_name)
                                                     : moduleName_(moduleName)
                                                     , robotName_(robotName)
-                                                    , DSType_(DSType){}
+                                                    , DSType_(DSType)
+                                                    , path_to_models_(path_to_models)
+                                                    , lpvDS_model_name_(lpvDS_model_name) {}
 
 
-bool DesVelocityCommandROS::initReader(){
-
-
+bool DesVelocityCommand_lpvDS::initReader(){
 
     des_com_vel_.resize(3);
     des_com_vel_.setZero();
@@ -38,62 +38,51 @@ bool DesVelocityCommandROS::initReader(){
     updateCoM();
 
 
-    if (DSType_ == 1){
-        // ====== Opening the port for desired DS Velocity in World ====== //
-        std::string DSVelocity_portName="/";
-        DSVelocity_portName += robotName_;
-        DSVelocity_portName += "/DesiredCoMVelocity:o";
+    // ======  Initialization of LPV-DS Model Class ====== //
+    path_model_ = path_to_models_ + lpvDS_model_name_ + "/";
+    cout << "The following model will be loaded: " << path_model_ << endl;
+    string path_dim    = path_model_ +  "dimensions";
+    string path_Priors = path_model_ +  "Priors";
+    string path_Mu     = path_model_ +  "Mu";
+    string path_Sigma  = path_model_ +  "Sigma";
+    string path_A      = path_model_ +  "A_k";
+    
+    /* Instantiate lpv-DS Model with parameters read from text files providing the path of the directory*/
+    LPV_DS_.reset(new lpvDS(path_dim.c_str(), path_Priors.c_str(), path_Mu.c_str(), path_Sigma.c_str(), path_A.c_str()));
 
+    /* Fill in attractor from text-file*/
+    
+    MatrixXd attractor;
+    string path_att    = path_model_ +  "attractor";
+    attractor = fileUtils_.readMatrix(path_att.c_str());
+    att_.resize(2);
+    att_ = attractor.col(0);
 
-        DSVelocity_port_In.open("/DesiredCoMVelocity_In:i");
-        if(!Network::connect(DSVelocity_portName.c_str(), DSVelocity_port_In.getName().c_str())){
-            printf(" Unable to connect to DS desired velocity reader port");
-            return false;
-        }
-
-
-        // ====== Opening the port for desired DS Attractor in World ====== //
-        std::string DSAttractor_portName="/";
-        DSAttractor_portName += robotName_;
-        DSAttractor_portName += "/DesiredCoMAttractor:o";
-
-
-        DSAttractor_port_In.open("/DesiredCoMAttractor_In:i");
-        if(!Network::connect(DSAttractor_portName.c_str(), DSAttractor_port_In.getName().c_str())){
-            printf(" Unable to connect to DS desired velocity reader port");
-            return false;
-        }
-
-    }
-
+    attractor_.resize(3);
+    attractor_(0) = att_(0);
+    attractor_(1) = att_(1);
+    attractor_(2) = 0;
 
     // Set maximum velocity values
     max_v = 0.1;
     max_w = 0.05;
     kappa_ = 0.1;
-    dist_thres_ = 0.15;
-    attractor_.setZero();
+    dist_thres_ = 0.15;    
     counter_ = 0;
 
     return true; 
 }
 
 
-void DesVelocityCommandROS::stop(){
+void DesVelocityCommand_lpvDS::stop(){
 
     // Close all in/out ports
     RootlinkPose_port_In.close();
     CoMPose_port_Out.close();
 
-    if (DSType_ == 1){
-        DSVelocity_port_In.close();
-        DSAttractor_port_In.close();
-    }
-
 }
 
-
-void DesVelocityCommandROS::updateCoM(){
+void DesVelocityCommand_lpvDS::updateCoM(){
 
     RootlinkPose_values = RootlinkPose_port_In.read(); 
     Rootlink_measurements.resize(RootlinkPose_values->size());    
@@ -109,7 +98,6 @@ void DesVelocityCommandROS::updateCoM(){
         CoM_orient_rpy(i) = Rootlink_measurements(CoM_pos.rows() + i);
 
     std::cout << "CoM position    x: " << CoM_pos(0) << " y:" << CoM_pos(1) << " z:" << CoM_pos(2) << std::endl;
-//    std::cout << "CoM orientation roll: " << CoM_orient_rpy(0) << " pitch:" << CoM_orient_rpy(1) << " yaw:" << CoM_orient_rpy(2) <<  std::endl;
 
     // Create Rotation matrix from RPY angles
     Eigen::Matrix3d Rot_z, CoM_orient_robot;
@@ -150,16 +138,16 @@ void DesVelocityCommandROS::updateCoM(){
 
 }
 
-void DesVelocityCommandROS::setAttractor(Eigen::Vector3d attractor){
+void DesVelocityCommand_lpvDS::setAttractor(Eigen::Vector3d attractor){
     attractor_ = attractor;
 }
 
 
-void DesVelocityCommandROS::setkappa(double kappa){
+void DesVelocityCommand_lpvDS::setkappa(double kappa){
     kappa_ = kappa;
 }
 
-Eigen::Vector3d DesVelocityCommandROS::linearDS(){
+Eigen::Vector3d DesVelocityCommand_lpvDS::linearDS(){
     Eigen::Vector3d x_dot;
 
     // x_dot = -k(x-x_att)
@@ -168,24 +156,27 @@ Eigen::Vector3d DesVelocityCommandROS::linearDS(){
 }
 
 
-Eigen::Vector3d DesVelocityCommandROS::DSfromROS(){
+Eigen::Vector3d DesVelocityCommand_lpvDS::DSfromLPVDS(){
+    Eigen::Vector2d x_dot_2d, att_2d (att_(0),att_(1)), x_2d (CoM_pos(0),CoM_pos(1)) ;
+    x_dot_2d = LPV_DS_->compute_f(x_2d, att_2d);
 
-    // Update attractor
-    DSAttractor_values = DSAttractor_port_In.read();
-    Eigen::Vector3d updated_attractor (DSAttractor_values->get(0).asDouble(), DSAttractor_values->get(1).asDouble(), CoM_pos(2));
-    setAttractor(updated_attractor);
+    double ds_vel_limit_ (0.3);
+    if (x_dot_2d.norm() > ds_vel_limit_){
+        x_dot_2d = x_dot_2d / x_dot_2d.norm() * ds_vel_limit_;
+    }
 
-    // Update desired Velocity from DS
-    DSVelocity_values = DSVelocity_port_In.read();
+    std::cout << "x_dot from lpvDS class v_x:" << x_dot_2d(0) << " v_y:" << x_dot_2d(1) << std::endl;
+
     Eigen::Vector3d x_dot;
-    for (int i= 0; i < 3; i++)
-        x_dot(i) = DSVelocity_values->get(i).asDouble();
+    x_dot(0) = x_dot_2d(0);
+    x_dot(1) = x_dot_2d(1);
+    x_dot(2) = 0;
 
     return x_dot;
 }
 
 
-Eigen::Vector3d DesVelocityCommandROS::RotateDSfromROS(Eigen::Vector3d x_dot){
+Eigen::Vector3d DesVelocityCommand_lpvDS::RotateDS(Eigen::Vector3d x_dot){
     Eigen::Vector3d x_dot_rot;
     // Rotate velocity vector to CoM Reference frame
    std::cout << "x_dot before rotation v_x:" << x_dot(0) << " v_y:" << x_dot(1) << std::endl;
@@ -196,7 +187,7 @@ Eigen::Vector3d DesVelocityCommandROS::RotateDSfromROS(Eigen::Vector3d x_dot){
 }
 
 
-double DesVelocityCommandROS::computeAngularVelocity(Eigen::Vector3d x_dot){
+double DesVelocityCommand_lpvDS::computeAngularVelocity(Eigen::Vector3d x_dot){
     x_dot(2) = 0;
     Eigen::Vector3d ds_dir    = x_dot.normalized();
     Eigen::Vector3d robot_dir(CoM_orient_rot(0,0),CoM_orient_rot(1,0),CoM_orient_rot(2,0));
@@ -205,7 +196,6 @@ double DesVelocityCommandROS::computeAngularVelocity(Eigen::Vector3d x_dot){
     Eigen::Vector3d x_dir(0,0,0);
     double robot_angle_   =   atan2(x_dir(1),x_dir(0)) - atan2(robot_dir(1),robot_dir(0));
     std::cout << "Current Robot Heading Angle (wrt. world x): " << robot_angle_ << std::endl;
-
     std::cout << "DS direction: " << ds_dir(0) << "  " << ds_dir(1) << std::endl;
 
     rot_angle_  = atan2(ds_dir(1),ds_dir(0)) - atan2(robot_dir(1),robot_dir(0));
@@ -238,14 +228,17 @@ double DesVelocityCommandROS::computeAngularVelocity(Eigen::Vector3d x_dot){
     return Omega(2);
 }
 
-void DesVelocityCommandROS::updateDesComVel(){
+void DesVelocityCommand_lpvDS::updateDesComVel(){
                  
-
         updateCoM();
+        attractor_(0) = att_(0);
+        attractor_(1) = att_(1);
+        attractor_(2) = CoM_pos(2);
 
-        Eigen::Vector3d v_des, v_des_;
+        Eigen::Vector3d v_des, v_des_, tmp_;
         double w_z, dist_targ;
-        dist_targ = (CoM_pos-attractor_).norm();
+        std::cout << "attractor: "<< attractor_(0) << " " << attractor_(1) << " "<<  attractor_(2)<< std::endl;
+        dist_targ = (CoM_pos - attractor_).norm();
         std::cout << "Distance to target: "<< dist_targ <<std::endl;
 
         if (dist_targ < dist_thres_){
@@ -260,9 +253,11 @@ void DesVelocityCommandROS::updateDesComVel(){
                 w_z   = kappa_*w_z;
             }
             else if (DSType_ == 1){
-                v_des_       = DSfromROS();
-                v_des        = RotateDSfromROS(v_des_);
+
+                v_des_       = DSfromLPVDS();
+                v_des        = RotateDS(v_des_);
                 des_omega_   = computeAngularVelocity(v_des_);
+                
                 if (abs(rot_angle_)> M_PI/10){ // If desired rotation angle >30deg slow down linear velocity
                     v_des(0) = 0.0*v_des(0);
                     v_des(1) = 0.0*v_des(1);

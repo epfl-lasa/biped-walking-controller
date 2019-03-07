@@ -862,20 +862,20 @@ void CpBalWlkCtrlThread::run()
 
     // }
 
-    DataLogger.Write_Data(Parameters->SamplingTime,
-                         CycleCounter,
-                         CpBalWlkController->CoPref,
-                         CpBalWlkController->DMod,
-                         CpBalWlkController->FtTraj,
-                         CpBalWlkController->VeloRef,
-                         F_lleg_jts_yarp,
-                         F_rleg_jts_yarp,
-                         RobotDevices->encoders_left_leg,
-                         RobotDevices->encoders_right_leg,
-                         BotSensors.l_foot_FT_vector,
-                         BotSensors.r_foot_FT_vector,
-                         CoM_measurements,
-                         Test_Data);
+//    DataLogger.Write_Data(Parameters->SamplingTime,
+//                         CycleCounter,
+//                         CpBalWlkController->CoPref,
+//                         CpBalWlkController->DMod,
+//                         CpBalWlkController->FtTraj,
+//                         CpBalWlkController->VeloRef,
+//                         F_lleg_jts_yarp,
+//                         F_rleg_jts_yarp,
+//                         RobotDevices->encoders_left_leg,
+//                         RobotDevices->encoders_right_leg,
+//                         BotSensors.l_foot_FT_vector,
+//                         BotSensors.r_foot_FT_vector,
+//                         CoM_measurements,
+//                         Test_Data);
 
    // 
    // stop if the robot loses contact wit the ground

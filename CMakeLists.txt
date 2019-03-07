@@ -60,6 +60,7 @@ set(COM_HEADERS_FOLDER  "${CMAKE_CURRENT_SOURCE_DIR}/desired-CoM-vel-cmd/include
 
 set(COM_WALKER_SRC      main_walker.cpp)
 set(COM_WALKER_ROS_SRC  main_walker_ros.cpp)
+set(COM_WALKER_LPVDS_SRC  main_walker_lpvDS.cpp)
 set(COM_KEYBOARD_SRC    main_keyboard.cpp)
 
 source_group("Source Files" FILES ${SOURCES} ${COM_SOURCES})
@@ -72,7 +73,8 @@ include_directories(${EIGEN3_INCLUDE_DIR}
                     ${YARP_INCLUDE_DIRS}
                     ${CURSES_INCLUDE_DIR}
                     ${HEADERS_FOLDER}
-                    ${COM_HEADERS_FOLDER})
+                    ${COM_HEADERS_FOLDER}
+                    ${LPVDS_INCLUDE_DIRS} )
 
 SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ICUB_LINK_FLAGS}")
 
@@ -82,8 +84,14 @@ add_definitions(-D_USE_MATH_DEFINES)
 add_executable(${PROJECT_NAME} ${COM_WALKER_SRC} ${SOURCES} ${HEADERS} ${COM_SRC_FOLDER}/DesVelocityCommand.cpp ${COM_HEADERS_FOLDER}/DesVelocityCommand.h)
 target_link_libraries(${PROJECT_NAME} ${libqpOASES} iKin ${YARP_LIBRARIES} ${yarpWholeBodyInterface_LIBRARIES} ${CURSES_LIBRARIES})
 
+# Executable for standalone walking controller with DS motion generator through ROS
 add_executable(${PROJECT_NAME}_ROS ${COM_WALKER_ROS_SRC} ${SOURCES} ${HEADERS} ${COM_SRC_FOLDER}/DesVelocityCommandROS.cpp ${COM_HEADERS_FOLDER}/DesVelocityCommandROS.h)
 target_link_libraries(${PROJECT_NAME}_ROS ${libqpOASES} iKin ${YARP_LIBRARIES} ${yarpWholeBodyInterface_LIBRARIES} ${CURSES_LIBRARIES})
+
+
+# Executable for standalone walking controller with DS motion generator via LPVDS class
+add_executable(${PROJECT_NAME}_LPVDS ${COM_WALKER_LPVDS_SRC} ${SOURCES} ${HEADERS} ${COM_SRC_FOLDER}/DesVelocityCommand_lpvDS.cpp ${COM_HEADERS_FOLDER}/DesVelocityCommand_lpvDS.h)
+target_link_libraries(${PROJECT_NAME}_LPVDS ${libqpOASES} iKin ${YARP_LIBRARIES} ${yarpWholeBodyInterface_LIBRARIES} ${CURSES_LIBRARIES} lpvDS)
 
 # Executable for the keyboard command reader
 add_executable(KeyboardReaderSender ${COM_KEYBOARD_SRC} ${COM_SRC_FOLDER}/KeyboardReaderSender.cpp ${COM_HEADERS_FOLDER}/KeyboardReaderSender.h)
