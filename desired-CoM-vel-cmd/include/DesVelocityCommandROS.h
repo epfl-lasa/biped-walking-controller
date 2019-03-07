@@ -84,6 +84,8 @@ class DesVelocityCommandROS
         Eigen::Vector3d linearDS();
 
         Eigen::Vector3d DSfromROS();
+        
+        Eigen::Vector3d RotateDSfromROS(Eigen::Vector3d x_dot);
 
         double computeAngularVelocity(Eigen::Vector3d x_dot);
 

@@ -68,8 +68,8 @@ bool DesVelocityCommandROS::initReader(){
 
 
     // Set maximum velocity values
-    max_v = 0.1;
-    max_w = 0.1;
+    max_v = 0.075;
+    max_w = 0.05;
     kappa_ = 0.1;
     dist_thres_ = 0.15;
     attractor_.setZero();
@@ -177,24 +177,41 @@ Eigen::Vector3d DesVelocityCommandROS::DSfromROS(){
 
     // Update desired Velocity from DS
     DSVelocity_values = DSVelocity_port_In.read();
-    Eigen::Vector3d x_dot, x_dot_rot;
+    Eigen::Vector3d x_dot;
     for (int i= 0; i < 3; i++)
         x_dot(i) = DSVelocity_values->get(i).asDouble();
 
+    return x_dot;
+}
+
+
+Eigen::Vector3d DesVelocityCommandROS::RotateDSfromROS(Eigen::Vector3d x_dot){
+    Eigen::Vector3d x_dot_rot;
     // Rotate velocity vector to CoM Reference frame
-//    std::cout << "x_dot before rotation v_x:" << x_dot(0) << " v_y:" << x_dot(1) << std::endl;
+   std::cout << "x_dot before rotation v_x:" << x_dot(0) << " v_y:" << x_dot(1) << std::endl;
     x_dot_rot =  CoM_orient_rot.inverse() * x_dot;
 //    std::cout << "x_dot after rotation v_x:" << x_dot_rot(0) << " v_y:" << x_dot_rot(1) << std::endl;
 
     return x_dot_rot;
 }
 
-double DesVelocityCommandROS::computeAngularVelocity(Eigen::Vector3d x_dot){
 
+double DesVelocityCommandROS::computeAngularVelocity(Eigen::Vector3d x_dot){
+    x_dot(2) = 0;
     Eigen::Vector3d ds_dir    = x_dot.normalized();
     Eigen::Vector3d robot_dir(CoM_orient_rot(0,0),CoM_orient_rot(1,0),CoM_orient_rot(2,0));
     robot_dir = robot_dir.normalized();
+    
+    Eigen::Vector3d x_dir(0,0,0);
+    double robot_angle_   =   atan2(x_dir(1),x_dir(0)) - atan2(robot_dir(1),robot_dir(0));
+    std::cout << "Current Robot Heading Angle (wrt. world x): " << robot_angle_ << std::endl;
+
+    std::cout << "DS direction: " << ds_dir(0) << "  " << ds_dir(1) << std::endl;
+
     rot_angle_  = atan2(ds_dir(1),ds_dir(0)) - atan2(robot_dir(1),robot_dir(0));
+    if (rot_angle_ > M_PI) {rot_angle_ -= 2* M_PI;}
+    else if (rot_angle_ <= -M_PI){rot_angle_ += 2* M_PI;}
+
     std::cout << "Desired Rotation Angle: " << rot_angle_ << std::endl;
 
     // Creating rotation matrix from current CoM to desired CoM
@@ -226,7 +243,7 @@ void DesVelocityCommandROS::updateDesComVel(){
 
         updateCoM();
 
-        Eigen::Vector3d v_des;
+        Eigen::Vector3d v_des, v_des_;
         double w_z, dist_targ;
         dist_targ = (CoM_pos-attractor_).norm();
         std::cout << "Distance to target: "<< dist_targ <<std::endl;
@@ -243,8 +260,9 @@ void DesVelocityCommandROS::updateDesComVel(){
                 w_z   = kappa_*w_z;
             }
             else if (DSType_ == 1){
-                v_des        = DSfromROS();
-                des_omega_   = computeAngularVelocity(v_des);
+                v_des_       = DSfromROS();
+                v_des        = RotateDSfromROS(v_des_);
+                des_omega_   = computeAngularVelocity(v_des_);
                 if (abs(rot_angle_)> M_PI/10){ // If desired rotation angle >30deg slow down linear velocity
                     v_des(0) = 0.0*v_des(0);
                     v_des(1) = 0.0*v_des(1);
